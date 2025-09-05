@@ -1,0 +1,361 @@
+:root{
+  --side-w: clamp(90px, 12vw, 240px);
+  --active-w: min(75vw, 980px);
+  --radius: 26px;
+  --gap: 0px;
+  --purple: #5618ff;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:#0b0b0b;
+  color:#fff;
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
+}
+
+/* HEADER */
+.header{
+  position:sticky; top:0; z-index:20;
+  height:80px; background:#173575; border-bottom:1px solid #1c0e5a;
+  display:flex; align-items:center; justify-content:center;
+}
+.header__brand{
+  position:absolute; left:16px; top:12px;
+
+}
+.img-logo{
+  width: 3em;
+  height: auto;
+}
+.header__actions{ position:absolute; right:12px; display:flex; gap:12px; }
+.btn{
+  appearance:none; border:0; cursor:pointer;
+  padding:10px 18px; border-radius:999px; background:#071b8a; color:#eee; font-weight:600;
+}
+.btn:hover{ filter:brightness(1.1); }
+
+/* PANORAMA */
+.panorama{
+  display:flex; gap:var(--gap);
+  height:calc(100svh - 64px);
+  overflow:hidden;
+}
+
+.panel{
+  position:relative;
+  flex:0 0 var(--side-w);
+  transition:flex-basis .6s ease, box-shadow .6s ease;
+  display:grid; place-items:center;
+  isolation:isolate;
+}
+.panel.active{
+  flex-basis:var(--active-w);
+  box-shadow:0 0 0 2px rgba(86,24,255,.25) inset;
+}
+
+
+
+/* Vídeo de fundo */
+.panel__media{ position:absolute; inset:0; overflow:hidden; z-index:0; }
+.panel__media video{ width:100%; height:100%; object-fit:cover; opacity:.35; }
+
+/* Camadas acima do vídeo */
+.panel > *:not(.panel__media){ position:relative; z-index:1; }
+
+/* ----------------------------- */
+/* BOTÃO “LOGO” + MOVIMENTO      */
+/* ----------------------------- */
+
+/* posição padrão nas colunas fechadas */
+.logo-btn{
+  position: absolute;
+  top: 48%;                 /* ~metade do painel (mais baixo) */
+  left: 8%;
+  transform: translateY(-50%);      /* centraliza verticalmente */
+  width:110px;
+  height:110px;
+  display:grid; place-items:center;
+  background:var(--blue);
+  color:#fff;
+  border-radius:8px;
+  border:0;
+  cursor:pointer;
+  z-index:2;
+  transition:
+    top .6s cubic-bezier(.2,.7,.2,1),
+    left .6s cubic-bezier(.2,.7,.2,1),
+    transform .6s cubic-bezier(.2,.7,.2,1),
+    width .3s ease, height .3s ease, border-radius .3s ease, filter .2s ease;
+}
+.logo-btn:hover{ filter:brightness(1.08); }
+
+
+.logo-btn > img{
+  width:15em;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  border-radius:8px;   /* opcional */
+  pointer-events:none; /* clique vai para o <button> */
+}
+
+/* posições especiais para c5/c6 SOMENTE quando não estão ativas */
+.panel:not(.active).c5 .logo-btn{ left:50%; transform:translateX(-50%); }
+.panel:not(.active).c6 .logo-btn{ left:auto; right:8%; }
+
+/* hover só quando não está ativa */
+.panel:not(.active) .logo-btn:hover{
+  filter:brightness(1.08);
+  transform:translateY(-2px) scale(1.02);
+}
+
+/* quando a coluna estiver ativa, centraliza exatamente no centro (mesmo do texto "Logo") */
+.panel.active .logo-btn{
+  top:0; bottom:0; left:0; right:0;   /* ocupa a caixa do painel */
+  margin:auto;                        /* centraliza X e Y */
+  transform:none;
+  width:clamp(88px, 9vw, 120px);
+  height:clamp(88px, 9vw, 120px);
+  border-radius:12px;
+}
+
+.brand-input.filled { outline: 2px solid rgba(86,24,255,.35); }
+
+
+/* Conteúdo da coluna ativa */
+.panel__content{
+  width:min(680px, 86%); margin-inline:auto;
+  padding:clamp(16px, 3vw, 36px);
+  border-radius:var(--radius);
+  background:rgba(0,0,0,.15);
+  backdrop-filter:blur(2px);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset;
+  transform:translateY(16px); opacity:0; pointer-events:none;
+  transition:opacity .45s ease .15s, transform .45s ease .15s;
+}
+.panel.active .panel__content{ opacity:1; transform:none; pointer-events:auto; }
+
+.stack{ display:grid; gap:18px; }
+.field{
+  display:block; width:100%; border:0; outline:0;
+  padding:16px 18px; border-radius:12px; background:var(--#ffff) color(#000); font-weight:600;
+}
+.cta{
+  margin-top:8px; justify-self:center;
+  padding:16px 28px; border-radius:999px; background-color: #071b8a; color:#fff; border:0; font-weight:700; cursor:pointer;
+}
+
+/* Player responsivo 16:9 */
+.video-16x9{
+  position:relative; width:100%; aspect-ratio:16/9;
+  border-radius:16px; overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.video-16x9 > video,
+.video-16x9 > iframe{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0;
+}
+
+/* Responsivo */
+@media (max-width:800px){
+  :root{ --active-w:92vw; --side-w:clamp(72px, 15vw, 120px); }
+  .logo-btn{ width:96px; height:96px; inset:auto auto 22% 6%; }
+}
+/* ===== Section: Sobre Nós + Contato (abaixo do panorama) ===== */
+.about-contact{
+  position: relative;
+  padding: clamp(36px, 8vw, 96px) 16px;
+  background: #cfeff4;                 /* azul claro como no mock */
+  color: #0e2130;                      /* texto escuro para contraste */
+  border-top: 1px solid rgba(0,0,0,.06);
+  overflow: hidden;
+}
+
+/* imagem central, atrás do texto */
+.about-contact .ac-hero{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(240px, 42vw, 480px);
+  opacity: .22;                       
+  pointer-events: none;
+  filter: drop-shadow(0 8px 22px rgba(0,0,0,.15));
+  z-index: 0;
+}
+
+.about-contact .ac-inner{
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;      /* divide no meio: Sobre | Contato */
+  gap: clamp(20px, 4vw, 64px);
+  align-items: start;
+}
+
+.about-contact .ac-col h2{
+  margin: 0 0 12px;
+  font-size: clamp(22px, 2.6vw, 30px);
+}
+
+.about-contact .ac-col p{
+  margin: 0 0 12px;
+  line-height: 1.65;
+  opacity: .95;
+}
+
+/* Lista do contato */
+.about-contact .ac-list{
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+/* Responsivo: empilha as colunas no mobile */
+@media (max-width: 900px){
+  .about-contact .ac-inner{
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .about-contact .ac-hero{
+    width: clamp(220px, 70vw, 520px);
+    top: 58%;
+  }
+}
+/* ===== Modal de Autenticação ===== */
+.modal{ position:fixed; inset:0; z-index:100; display:none; }
+.modal.is-open{ display:block; }
+.modal__backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.65); }
+
+.modal__dialog{
+  position:relative; z-index:1;
+  width:min(720px, 92vw);
+  margin:clamp(48px, 8vh, 96px) auto;
+  background-color: rgb(19, 93, 230);
+  border-radius: 24px;
+  padding: clamp(20px, 3vw, 32px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  color:#fff;
+}
+.modal__close{
+  position:absolute; top:8px; right:10px;
+  background:transparent; border:0; color:#fff;
+  font-size:28px; line-height:1; cursor:pointer;
+  opacity:.8;
+}
+.modal__close:hover{ opacity:1; }
+
+.modal__header{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.modal__header h2{ margin:0; font-size:clamp(20px,2.4vw,26px); }
+
+.modal__tabs{ display:flex; gap:8px; }
+.modal__tab{
+  background: rgba(255,255,255,.15);
+  color:#fff; border:0; padding:8px 12px; border-radius:999px; cursor:pointer;
+}
+.modal__tab.is-active{ background:#fff; color:#111; }
+
+.auth-form{ display:grid; gap:14px; margin-bottom:10px; }
+.field--light{
+  background:#fff; color:#111;
+  border-radius:999px; padding:14px 16px; border:0; outline:none;
+}
+.cta--block{ width:100%; border-radius:999px; }
+
+.auth-providers{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:14px;
+}
+.provider{
+  display:flex; align-items:center; gap:8px;
+  background:#fff; color:#111; border:0; cursor:pointer;
+  padding:10px 14px; border-radius:999px;
+}
+.provider .ico{ width:20px; height:20px; display:block; }
+
+/* utilitário para esconder elementos via JS */
+.is-hidden{ display:none !important; }
+
+/* ===== Botão "hambúrguer" no header ===== */
+
+.hamburger{
+  display: inline-grid; gap: 5px;
+  width: 40px; height: 40px; padding: 8px;
+  border-radius: 10px; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.12);
+}
+.hamburger span{
+  height: 2px; width: 100%;
+  background: #fff; display: block; border-radius: 2px;
+}
+
+/* ===== Popover do usuário (Histórico / Sair) ===== */
+.menu-popover{
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  background-color: #1266ac;
+  color: #fff;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.35);
+  display: none;
+  z-index: 30;
+}
+.menu-popover.is-open{ display: block; }
+
+.menu-item{
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.menu-item:hover{ background: rgba(255,255,255,.18); }
+.footer{
+  text-align: center;
+  padding: 16px;
+  background-color: #173575;
+  color: #fff;
+  font-size: 14px;
+  border-top: 1px solid #1c0e5a;
+}
+.auth-view{ display:grid; gap:14px; }
+.auth-view .auth-form{ margin-bottom: 6px; }
+.auth-providers{ margin-top: 10px; }
+/* ===== Centralizar LOGOS quando o painel estiver FECHADO (não ativo) ===== */
+.panel:not(.active) .logo-btn{
+  position: absolute;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  width: clamp(88px, 9vw, 120px);
+  height: clamp(88px, 9vw, 120px);
+}
+
+/* Hover mantendo o centro */
+.panel:not(.active) .logo-btn:hover{
+  transform: translate(-50%, -52%) scale(1.02) !important;
+  filter: brightness(1.08);
+}
+
+/* Mobile: garante o mesmo comportamento (evita o inset da regra antiga) */
+@media (max-width: 800px){
+  .panel:not(.active) .logo-btn{
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 96px;
+    height: 96px;
+  }
+}
