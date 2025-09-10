@@ -4,6 +4,9 @@
 const $  = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
+/* ================= CONFIGURAÇÃO DA API ================= */
+const API_URL = "http://localhost:3000/auth"; // ajuste se seu backend tiver outro endereço
+
 /* ================= PANORAMA + LOGOS ================= */
 const panorama = $('#panorama');
 
@@ -94,7 +97,15 @@ const menuSair      = $('#menuSair');
 const btnLoginHdr   = $('#btnLogin');
 const btnRegistro   = $('#btnRegistro');
 
-function isLoggedIn(){ return localStorage.getItem('sm_isLoggedIn') === '1'; }
+/* --- Melhoria: usar apenas o token para saber login --- */
+function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
+function setLoggedIn(v){
+  if (!v) {
+    localStorage.removeItem('sm_token');
+  }
+  updateAuthUI(v);
+}
+
 function updateAuthUI(logged){
   btnRegistro?.classList.toggle('is-hidden', logged);
   btnLoginHdr?.classList.toggle('is-hidden', logged);
@@ -103,10 +114,6 @@ function updateAuthUI(logged){
     userMenu?.classList.remove('is-open');
     btnMenu?.setAttribute('aria-expanded','false');
   }
-}
-function setLoggedIn(v){
-  localStorage.setItem('sm_isLoggedIn', v ? '1' : '0');
-  updateAuthUI(v);
 }
 document.addEventListener('DOMContentLoaded', ()=> updateAuthUI(isLoggedIn()));
 
@@ -132,23 +139,62 @@ document.addEventListener('keydown', (e)=>{
 menuHistorico?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); console.log('Abrir histórico'); });
 menuSair?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); setLoggedIn(false); });
 
-/* Expor para auth.js (Firebase) */
+/* Expor para auth.js (Firebase ou outro provedor) */
 window.setLoggedIn = setLoggedIn;
 window.closeAllAuthModals = function(){ closeModal(loginModal); closeModal(registerModal); };
 
-/* (Opcional) DEMO sem Firebase — deixe false em produção */
-const USE_DEMO_AUTH = false;
-if (USE_DEMO_AUTH){
-  $('#form-login')?.addEventListener('submit', e=>{
-    e.preventDefault(); setLoggedIn(true); closeModal(loginModal);
-  });
-  $('#form-register')?.addEventListener('submit', e=>{
-    e.preventDefault(); setLoggedIn(true); closeModal(registerModal);
-  });
-  $$('.provider').forEach(btn => btn.addEventListener('click', ()=>{
-    setLoggedIn(true); window.closeAllAuthModals();
-  }));
-}
+/* ================= FORM: LOGIN E REGISTRO ================= */
+$('#form-login')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const body = {
+    email: form.get('email'),
+    password: form.get('password')
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body) // --- melhoria: remove credentials: 'include'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro no login');
+
+    localStorage.setItem('sm_token', data.token);
+    setLoggedIn(true);
+    closeModal(loginModal);
+  } catch(err){
+    alert(err.message);
+  }
+});
+
+$('#form-register')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const body = {
+    name: form.get('name'),
+    email: form.get('email'),
+    password: form.get('password')
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body) // --- melhoria: remove credentials: 'include'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro no registro');
+
+    alert('Conta criada com sucesso!');
+    localStorage.setItem('sm_token', data.token); // salva token se backend devolver
+    setLoggedIn(true);
+    closeModal(registerModal);
+  } catch(err){
+    alert(err.message);
+  }
+});
 
 /* QoL: marca input de marca como preenchido */
 document.addEventListener('input', (e)=>{
