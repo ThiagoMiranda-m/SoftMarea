@@ -4,6 +4,38 @@
 const $  = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
+/* ========= Toast / Notificação ========= */
+let toast = document.getElementById('toast');
+let toastText = document.getElementById('toastText');
+let toastTimer = null;
+
+function ensureToast(){
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.className = 'toast';
+    toastText = document.createElement('span');
+    toastText.id = 'toastText';
+    toast.appendChild(toastText);
+    document.body.appendChild(toast);
+  }
+  if (!toastText) {
+    toastText = document.createElement('span');
+    toastText.id = 'toastText';
+    toast.appendChild(toastText);
+  }
+}
+function showToast(message, type = 'success', ms = 2600){
+  ensureToast();
+  toast.classList.remove('toast--success','toast--error','is-open');
+  toastText.textContent = message;
+  toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
+  requestAnimationFrame(()=> toast.classList.add('is-open'));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toast.classList.remove('is-open'), ms);
+}
+window.showToast = showToast;
+
 /* ================= CONFIGURAÇÃO DA API ================= */
 const API_URL = "http://localhost:3000/auth"; // ajuste se seu backend tiver outro endereço
 
@@ -99,11 +131,18 @@ const btnRegistro   = $('#btnRegistro');
 
 /* --- Melhoria: usar apenas o token para saber login --- */
 function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
-function setLoggedIn(v){
+function setLoggedIn(v, origin = 'login'){
   if (!v) {
     localStorage.removeItem('sm_token');
+    updateAuthUI(false);
+    userMenu?.classList.remove('is-open');
+    btnMenu ?.setAttribute('aria-expanded','false');
+    return;
   }
-  updateAuthUI(v);
+  updateAuthUI(true);
+  window.closeAllAuthModals?.();
+  const msg = origin === 'register' ? 'Registrado com sucesso' : 'Conectado com sucesso';
+  window.showToast?.(msg, 'success');
 }
 
 function updateAuthUI(logged){
@@ -156,16 +195,16 @@ $('#form-login')?.addEventListener('submit', async e=>{
     const res = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body) // --- melhoria: remove credentials: 'include'
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro no login');
 
     localStorage.setItem('sm_token', data.token);
-    setLoggedIn(true);
+    setLoggedIn(true, 'login');
     closeModal(loginModal);
   } catch(err){
-    alert(err.message);
+    showToast(err.message || 'Erro no login', 'error');
   }
 });
 
@@ -182,17 +221,16 @@ $('#form-register')?.addEventListener('submit', async e=>{
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body) // --- melhoria: remove credentials: 'include'
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro no registro');
 
-    alert('Conta criada com sucesso!');
-    localStorage.setItem('sm_token', data.token); // salva token se backend devolver
-    setLoggedIn(true);
+    localStorage.setItem('sm_token', data.token || '1'); // se o backend não retornar token
+    setLoggedIn(true, 'register');
     closeModal(registerModal);
   } catch(err){
-    alert(err.message);
+    showToast(err.message || 'Erro no registro', 'error');
   }
 });
 
