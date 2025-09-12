@@ -10,15 +10,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ================== ALTERAÇÃO IMPORTANTE AQUI ==================
-// Permite que o front-end (rodando de qualquer lugar) se comunique com a API
-app.use(cors({
-  // Se você usa cookies/sessões, é importante especificar a origem
-  // e manter credentials: true. Se não, um cors() simples resolve.
-  // Para funcionar com arquivos abertos localmente, a origem pode variar.
-  // Vamos usar uma configuração mais permissiva para desenvolvimento.
-  origin: true, // Reflete a origem da requisição, útil para `file://`
-  credentials: true
-}));
+// Permite que qualquer origem (incluindo seu arquivo HTML local) 
+// se comunique com a API.
+app.use(cors());
 // ==============================================================
 
 app.get('/', (_, res) => res.send('API OK'));
