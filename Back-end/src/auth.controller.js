@@ -4,6 +4,14 @@ const pool = require('./db');
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
+// Função para validar a senha com as novas regras
+const isPasswordValid = (password) => {
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasMinLength = password.length >= 8;
+  return hasUpperCase && hasNumber && hasMinLength;
+};
+
 exports.register = async (req, res) => {
   try {
     const name = String(req.body.name || '').trim();
@@ -13,9 +21,14 @@ exports.register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Nome, e-mail e senha são obrigatórios.' });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'A senha deve ter pelo menos 8 caracteres.' });
+
+    // ================== NOVA REGRA DE NEGÓCIO DA SENHA ==================
+    if (!isPasswordValid(password)) {
+      return res.status(400).json({
+        error: 'A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um número.'
+      });
     }
+    // ====================================================================
 
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length) {
@@ -58,7 +71,6 @@ exports.login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
     );
 
-    // Exemplo com cookie HttpOnly (opcional, mas recomendado se o front for web)
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -74,6 +86,5 @@ exports.login = async (req, res) => {
 };
 
 exports.me = async (req, res) => {
-  // req.user é preenchido pelo middleware de auth via JWT
   return res.json({ userId: req.user.sub, email: req.user.email });
 };
