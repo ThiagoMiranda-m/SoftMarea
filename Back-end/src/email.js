@@ -27,4 +27,24 @@ exports.sendVerificationCode = async (to, code) => {
   });
 
   console.log("E-mail de verificação enviado! Preview URL: %s", nodemailer.getTestMessageUrl(info));
+
+exports.sendPasswordResetEmail = async (to, token) => {
+  const resetLink = `http://127.0.0.1:5500/Front-End/HTML/reset-password.html?token=${token}`;
+
+  const info = await transporter.sendMail({
+    from: '"SoftMarea" <no-reply@softmarea.com>',
+    to: to,
+    subject: "Redefinição de Senha - SoftMarea",
+    html: `
+      <h2>Redefinição de Senha</h2>
+      <p>Recebemos uma solicitação para redefinir sua senha. Se foi você, clique no link abaixo para criar uma nova senha:</p>
+      <a href="${resetLink}" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        Redefinir Senha
+      </a>
+      <p>Este link expira em 1 hora. Se você não solicitou isso, pode ignorar este e-mail.</p>
+    `,
+  });
+
+  console.log("E-mail de redefinição de senha enviado! Preview URL: %s", nodemailer.getTestMessageUrl(info));
+};
 };

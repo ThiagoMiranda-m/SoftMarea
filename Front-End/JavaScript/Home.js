@@ -4,6 +4,8 @@
 const $  = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
+
+
 /* ========= Toast / Notificação ========= */
 let toast = document.getElementById('toast');
 let toastText = document.getElementById('toastText');
@@ -91,10 +93,12 @@ panorama?.addEventListener('click', (ev)=>{
 /* ================= MODAIS: LOGIN, REGISTRO E VERIFICAÇÃO ================= */
 const loginModal      = $('#loginModal');
 const registerModal   = $('#registerModal');
-const verifyCodeModal = $('#verifyCodeModal'); // Novo modal
+const verifyCodeModal = $('#verifyCodeModal'); 
+const forgotPasswordModal = $('#forgotPasswordModal');// Novo modal
 
 const btnOpenLogin    = $('#btnLogin');
 const btnOpenRegister = $('#btnRegistro');
+const btnForgotPassword = $('#btnForgotPassword'); // Novo botão
 
 let userEmailForVerification = ''; // Variável para guardar o email durante a verificação
 
@@ -112,8 +116,8 @@ function closeModal(modal){
 btnOpenLogin?.addEventListener('click', ()=> openModal(loginModal));
 btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
 
-// Atualizado para incluir o novo modal
-[loginModal, registerModal, verifyCodeModal].forEach(modal=>{
+// Atualizado para incluir todos os modais na lógica de fechar
+[loginModal, registerModal, verifyCodeModal, forgotPasswordModal].forEach(modal=>{
   modal?.addEventListener('click', (e)=>{
     if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal);
   });
@@ -122,7 +126,8 @@ document.addEventListener('keydown', (e)=>{
   if (e.key !== 'Escape') return;
   if (loginModal?.classList.contains('is-open'))    closeModal(loginModal);
   if (registerModal?.classList.contains('is-open')) closeModal(registerModal);
-  if (verifyCodeModal?.classList.contains('is-open')) closeModal(verifyCodeModal); // Novo
+  if (verifyCodeModal?.classList.contains('is-open')) closeModal(verifyCodeModal);
+  if (forgotPasswordModal?.classList.contains('is-open')) closeModal(forgotPasswordModal);
 });
 
 
@@ -188,6 +193,7 @@ window.closeAllAuthModals = function(){
   closeModal(loginModal);
   closeModal(registerModal);
   closeModal(verifyCodeModal);
+  closeModal(forgotPasswordModal);
 };
 
 /* ================= FORM: LOGIN ================= */
@@ -272,6 +278,27 @@ $('#form-verify-code')?.addEventListener('submit', async e=>{
   }
 });
 
+/* ================= FORM: ESQUECI A SENHA ================= */
+$('#form-forgot-password')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const body = { email: form.get('email') };
+
+  try {
+    const res = await fetch(`${API_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao enviar o e-mail');
+
+    closeModal(forgotPasswordModal);
+    showToast(data.message, 'success', 4000);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
 
 /* ================= VALIDAÇÃO DE SENHA EM TEMPO REAL ================= */
 const registerPasswordInput = $('#registerPassword');
@@ -294,3 +321,31 @@ if (registerPasswordInput && passwordReqsContainer) {
     reqs.number.classList.toggle('is-valid', hasNumber);
   });
 }
+
+btnForgotPassword?.addEventListener('click', e => {
+  e.preventDefault();
+  closeModal(loginModal);
+  openModal(forgotPasswordModal);
+});
+
+// Adicione a lógica de submit para o novo formulário
+$('#form-forgot-password')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const body = { email: form.get('email') };
+
+  try {
+    const res = await fetch(`${API_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao enviar o e-mail');
+
+    closeModal(forgotPasswordModal);
+    showToast(data.message, 'success', 4000);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});

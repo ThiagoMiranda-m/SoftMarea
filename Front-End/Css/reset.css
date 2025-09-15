@@ -1,0 +1,10 @@
+body { display: grid; place-items: center; min-height: 100vh; }
+.reset-container {
+  width: min(420px, 90vw);
+  padding: 32px;
+  background-color: rgb(19, 93, 230);
+  border-radius: 24px;
+  color: #fff;
+}
+.reset-container h2 { margin: 0 0 12px; font-size: 24px; }
+.reset-container form { display: grid; gap: 14px; }

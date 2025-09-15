@@ -246,6 +246,19 @@ body{
 }
 .provider .ico{ width:20px; height:20px; display:block; }
 
+.forgot-password-link {
+  display: block;
+  text-align: right;
+  font-size: 14px;
+  color: #fff;
+  opacity: 0.8;
+  margin: -4px 8px 12px 0;
+  text-decoration: none;
+}
+.forgot-password-link:hover {
+  opacity: 1;
+}
+
 /* ========== TOAST / NOTIFICAÇÃO ========== */
 .toast{
   position:fixed;

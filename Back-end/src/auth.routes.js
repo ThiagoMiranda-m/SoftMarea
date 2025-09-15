@@ -5,10 +5,12 @@ const ctrl = require('./auth.controller');
 const auth = require('./auth.middleware');
 
 router.post('/register', ctrl.register);
-router.post('/login',    ctrl.login);
-router.get('/me',        auth, ctrl.me);
-
-// ==== NOVA ROTA PARA VERIFICAR O CÓDIGO ====
 router.post('/verify-code', ctrl.verifyCode);
+router.post('/login', ctrl.login);
+router.get('/me', auth, ctrl.me);
+
+// ==== NOVAS ROTAS PARA ESQUECER A SENHA ====
+router.post('/forgot-password', ctrl.forgotPassword);
+router.post('/reset-password', ctrl.resetPassword);
 
 module.exports = router;

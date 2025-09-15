@@ -135,3 +135,75 @@ exports.login = async (req, res) => {
 exports.me = async (req, res) => {
   return res.json({ userId: req.user.sub, email: req.user.email });
 };
+
+
+const crypto = require('crypto');
+const { sendPasswordResetEmail } = require('./email');
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = normalizeEmail(email);
+
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ? AND is_verified = TRUE', [normalizedEmail]);
+    const user = rows[0];
+
+    if (!user) {
+      // Por segurança, não informamos se o e-mail existe ou não.
+      return res.status(200).json({ message: 'Se um usuário com este e-mail existir, um link de redefinição será enviado.' });
+    }
+
+    const reset_token = crypto.randomBytes(32).toString('hex');
+    const reset_token_expires_at = new Date(Date.now() + 60 * 60 * 1000); // Expira em 1 hora
+
+    await pool.query(
+      'UPDATE users SET reset_token = ?, reset_token_expires_at = ? WHERE id = ?',
+      [reset_token, reset_token_expires_at, user.id]
+    );
+
+    await sendPasswordResetEmail(user.email, reset_token);
+
+    return res.status(200).json({ message: 'Se um usuário com este e-mail existir, um link de redefinição será enviado.' });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
+    }
+
+    // Valida a nova senha com as regras de negócio
+    if (!isPasswordValid(password)) {
+      return res.status(400).json({
+        error: 'A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um número.'
+      });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM users WHERE reset_token = ? AND reset_token_expires_at > NOW()', [token]);
+    const user = rows[0];
+
+    if (!user) {
+      return res.status(400).json({ error: 'Token de redefinição inválido ou expirado.' });
+    }
+
+    const new_password_hash = await bcrypt.hash(password, 12);
+
+    await pool.query(
+      'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires_at = NULL WHERE id = ?',
+      [new_password_hash, user.id]
+    );
+
+    return res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
+  }
+};
