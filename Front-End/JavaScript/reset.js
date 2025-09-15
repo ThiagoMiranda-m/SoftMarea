@@ -1,16 +1,20 @@
 "use strict";
 
 /* =================== LÓGICA DA PÁGINA DE REDEFINIÇÃO DE SENHA =================== */
+
+// Helper para selecionar elementos (precisamos dele aqui também)
 const $ = (s, el = document) => el.querySelector(s);
 
 const form = $('#form-reset-password');
 const newPasswordInput = $('#newPassword');
+const resetContainer = $('.reset-container'); // Container principal para feedback
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
   const form = e.target;
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
+  submitButton.textContent = 'Aguarde...';
 
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
@@ -19,6 +23,7 @@ form.addEventListener('submit', async e => {
   if (!token) {
     alert('Erro: Token de redefinição não encontrado na URL.');
     submitButton.disabled = false;
+    submitButton.textContent = 'Salvar Nova Senha';
     return;
   }
 
@@ -31,11 +36,23 @@ form.addEventListener('submit', async e => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
-    alert('Senha redefinida com sucesso! Você já pode fechar esta página e fazer o login.');
-    form.innerHTML = '<p style="text-align: center;">Senha alterada com sucesso!</p>';
+    // ============ MUDANÇA AQUI: MOSTRA MENSAGEM E REDIRECIONA ============
+    
+    // 1. Mostra a mensagem de sucesso na página
+    resetContainer.innerHTML = `
+      <h2>Senha Redefinida!</h2>
+      <p style="text-align: center;">A sua senha foi alterada com sucesso. Você será redirecionado para a página de login em 3 segundos.</p>
+    `;
+
+    // 2. Redireciona para a página principal após 3 segundos
+    setTimeout(() => {
+      window.location.href = 'Home.html'; // Redireciona para a página inicial
+    }, 3000); // 3000 milissegundos = 3 segundos
+
   } catch (err) {
     alert(`Erro: ${err.message}`);
     submitButton.disabled = false;
+    submitButton.textContent = 'Salvar Nova Senha';
   }
 });
 
@@ -44,6 +61,7 @@ form.addEventListener('submit', async e => {
 const passwordReqsContainer = $('#password-reqs');
 
 if (newPasswordInput && passwordReqsContainer) {
+  // Recria os requisitos no JS para garantir que existam
   passwordReqsContainer.innerHTML = `
     <div class="req" data-req="length"><span class="req__bullet"></span> Mínimo 8 caracteres</div>
     <div class="req" data-req="case"><span class="req__bullet"></span> Uma letra maiúscula</div>
