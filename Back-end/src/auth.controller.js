@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto'); // Módulo nativo para gerar códigos seguros
+const crypto = require('crypto');
 const pool = require('./db');
-const { sendVerificationCode } = require('./email'); // Helper para enviar e-mail
+const {sendVerificationCode, sendPasswordResetEmail } = require('./email'); // Linha corrigida
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
@@ -136,9 +136,6 @@ exports.me = async (req, res) => {
   return res.json({ userId: req.user.sub, email: req.user.email });
 };
 
-
-const crypto = require('crypto');
-const { sendPasswordResetEmail } = require('./email');
 
 exports.forgotPassword = async (req, res) => {
   try {

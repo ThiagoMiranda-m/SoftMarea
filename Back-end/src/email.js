@@ -1,3 +1,4 @@
+// SoftMarea/Back-end/src/email.js CORRIGIDO
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -27,8 +28,10 @@ exports.sendVerificationCode = async (to, code) => {
   });
 
   console.log("E-mail de verificação enviado! Preview URL: %s", nodemailer.getTestMessageUrl(info));
+};
 
 exports.sendPasswordResetEmail = async (to, token) => {
+  // ATENÇÃO: Verifique se este link corresponde à sua página de redefinição de senha
   const resetLink = `http://127.0.0.1:5500/Front-End/HTML/reset-password.html?token=${token}`;
 
   const info = await transporter.sendMail({
@@ -46,5 +49,4 @@ exports.sendPasswordResetEmail = async (to, token) => {
   });
 
   console.log("E-mail de redefinição de senha enviado! Preview URL: %s", nodemailer.getTestMessageUrl(info));
-};
 };
