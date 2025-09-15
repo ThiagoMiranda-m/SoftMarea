@@ -37,7 +37,7 @@ function showToast(message, type = 'success', ms = 2600){
 window.showToast = showToast;
 
 /* ================= CONFIGURAÇÃO DA API ================= */
-const API_URL = "http://localhost:3000/auth"; // ajuste se seu backend tiver outro endereço
+const API_URL = "http://localhost:3000/auth";
 
 /* =================== DADOS: MODELOS / ANOS =================== */
 // Modelos por marca (ajuste à vontade)
@@ -148,6 +148,7 @@ panorama?.addEventListener('click', (ev)=>{
   activatePanel(btn.closest('.panel'));
 });
 
+<<<<<<< HEAD
 /* ================= MODAIS: LOGIN, REGISTRO, VERIFICAÇÃO, ESQUECI ================= */
 const loginModal          = $('#loginModal');
 const registerModal       = $('#registerModal');
@@ -159,21 +160,49 @@ const btnOpenRegister     = $('#btnRegistro');
 const btnForgotPassword   = $('#btnForgotPassword');
 
 let userEmailForVerification = ''; // guarda o e-mail durante a verificação
+=======
 
-function openModal(modal){
+/* ================= MODAIS ================= */
+const loginModal          = $('#loginModal');
+const registerModal       = $('#registerModal');
+const verifyCodeModal     = $('#verifyCodeModal');
+const forgotPasswordModal = $('#forgotPasswordModal');
+
+const btnOpenLogin        = $('#btnLogin');
+const btnOpenRegister     = $('#btnRegistro');
+const btnForgotPassword   = $('#btnForgotPassword');
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
+
+let userEmailForVerification = '';
+
+function openModal(modal) {
   if(!modal) return;
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
 }
-function closeModal(modal){
+function closeModal(modal) {
   if(!modal) return;
   modal.classList.remove('is-open');
   document.body.style.overflow = '';
 }
 
+<<<<<<< HEAD
 btnOpenLogin   ?.addEventListener('click', ()=> openModal(loginModal));
+=======
+// Eventos para abrir os modais
+btnOpenLogin?.addEventListener('click', ()=> openModal(loginModal));
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
+btnForgotPassword?.addEventListener('click', e => {
+  e.preventDefault();
+  closeModal(loginModal);
+  openModal(forgotPasswordModal);
+});
 
+<<<<<<< HEAD
+=======
+// Lógica para fechar os modais
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 [loginModal, registerModal, verifyCodeModal, forgotPasswordModal].forEach(modal=>{
   modal?.addEventListener('click', (e)=>{
     if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal);
@@ -181,10 +210,15 @@ btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
 });
 document.addEventListener('keydown', (e)=>{
   if (e.key !== 'Escape') return;
+<<<<<<< HEAD
   if (loginModal?.classList.contains('is-open'))          closeModal(loginModal);
   if (registerModal?.classList.contains('is-open'))       closeModal(registerModal);
   if (verifyCodeModal?.classList.contains('is-open'))     closeModal(verifyCodeModal);
   if (forgotPasswordModal?.classList.contains('is-open')) closeModal(forgotPasswordModal);
+=======
+  const openModal = $('.modal.is-open');
+  if (openModal) closeModal(openModal);
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 });
 
 /* ================= HEADER: estado logado/deslogado ================= */
@@ -192,36 +226,35 @@ const btnMenu       = $('#btnMenu');
 const userMenu      = $('#userMenu');
 const menuHistorico = $('#menuHistorico');
 const menuSair      = $('#menuSair');
-
 const btnLoginHdr   = $('#btnLogin');
 const btnRegistro   = $('#btnRegistro');
 
 function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
-function setLoggedIn(v, origin = 'login'){
+
+function setLoggedIn(v, origin = 'login') {
   if (!v) {
     localStorage.removeItem('sm_token');
     updateAuthUI(false);
-    userMenu?.classList.remove('is-open');
-    btnMenu ?.setAttribute('aria-expanded','false');
     return;
   }
   updateAuthUI(true);
   window.closeAllAuthModals?.();
-  const msg = origin === 'register' ? 'Registrado com sucesso' : 'Conectado com sucesso';
+  const msg = origin === 'register' ? 'Registado com sucesso' : 'Conectado com sucesso';
   window.showToast?.(msg, 'success');
 }
 window.setLoggedIn = setLoggedIn; // caso outro script precise
 
-function updateAuthUI(logged){
+function updateAuthUI(logged) {
   btnRegistro?.classList.toggle('is-hidden', logged);
   btnLoginHdr?.classList.toggle('is-hidden', logged);
   btnMenu?.classList.toggle('is-hidden', !logged);
-  if (!logged){
+  if (!logged) {
     userMenu?.classList.remove('is-open');
     btnMenu?.setAttribute('aria-expanded','false');
   }
 }
 document.addEventListener('DOMContentLoaded', ()=> updateAuthUI(isLoggedIn()));
+<<<<<<< HEAD
 
 btnMenu?.addEventListener('click', (e)=>{
   const open = userMenu.classList.toggle('is-open');
@@ -252,6 +285,10 @@ menuSair?.addEventListener('click', ()=>{
 });
 
 // util: fechar todos os modais
+=======
+menuSair?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); setLoggedIn(false); });
+
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 window.closeAllAuthModals = function(){
   closeModal(loginModal);
   closeModal(registerModal);
@@ -262,8 +299,17 @@ window.closeAllAuthModals = function(){
 /* ================= FORM: LOGIN ================= */
 $('#form-login')?.addEventListener('submit', async e=>{
   e.preventDefault();
+<<<<<<< HEAD
   const form = new FormData(e.target);
   const body = { email: form.get('email'), password: form.get('password') };
+=======
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const formData = new FormData(form);
+  const body = { email: formData.get('email'), password: formData.get('password') };
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 
   try {
     const res = await fetch(`${API_URL}/login`, {
@@ -276,22 +322,31 @@ $('#form-login')?.addEventListener('submit', async e=>{
 
     localStorage.setItem('sm_token', data.token);
     setLoggedIn(true, 'login');
-    closeModal(loginModal);
   } catch(err){
     showToast(err.message || 'Erro no login', 'error');
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
 /* ================= FORM: REGISTRO ================= */
 $('#form-register')?.addEventListener('submit', async e=>{
   e.preventDefault();
+<<<<<<< HEAD
   const form = new FormData(e.target);
   userEmailForVerification = form.get('email'); // guarda e-mail
+=======
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 
+  const formData = new FormData(form);
+  userEmailForVerification = formData.get('email');
   const body = {
-    name: form.get('name'),
+    name: formData.get('name'),
     email: userEmailForVerification,
-    password: form.get('password')
+    password: formData.get('password')
   };
 
   try {
@@ -301,21 +356,39 @@ $('#form-register')?.addEventListener('submit', async e=>{
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro no registro');
+    if (!res.ok) throw new Error(data.error || 'Erro no registo');
 
     closeModal(registerModal);
     openModal(verifyCodeModal);
+<<<<<<< HEAD
     showToast(data.message || 'Código enviado para o e-mail', 'success');
+=======
+    showToast(data.message, 'success');
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
   } catch(err){
-    showToast(err.message || 'Erro no registro', 'error');
+    showToast(err.message || 'Erro no registo', 'error');
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
 /* ================= FORM: VERIFICAR CÓDIGO ================= */
 $('#form-verify-code')?.addEventListener('submit', async e=>{
   e.preventDefault();
+<<<<<<< HEAD
   const form = new FormData(e.target);
   const body = { email: userEmailForVerification, code: form.get('code') };
+=======
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const formData = new FormData(form);
+  const body = {
+    email: userEmailForVerification,
+    code: formData.get('code')
+  };
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 
   try {
     const res = await fetch(`${API_URL}/verify-code`, {
@@ -328,17 +401,26 @@ $('#form-verify-code')?.addEventListener('submit', async e=>{
 
     localStorage.setItem('sm_token', data.token);
     setLoggedIn(true, 'register');
+<<<<<<< HEAD
     closeModal(verifyCodeModal);
+=======
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
   } catch(err){
     showToast(err.message || 'Erro na verificação', 'error');
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
 /* ================= FORM: ESQUECI A SENHA ================= */
 $('#form-forgot-password')?.addEventListener('submit', async e => {
   e.preventDefault();
-  const form = new FormData(e.target);
-  const body = { email: form.get('email') };
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const formData = new FormData(form);
+  const body = { email: formData.get('email') };
 
   try {
     const res = await fetch(`${API_URL}/forgot-password`, {
@@ -352,6 +434,7 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
     closeModal(forgotPasswordModal);
     showToast(data.message || 'E-mail enviado com sucesso', 'success', 4000);
   } catch (err) {
+<<<<<<< HEAD
     showToast(err.message || 'Erro ao enviar o e-mail', 'error');
   }
 });
@@ -379,3 +462,32 @@ if (registerPasswordInput && passwordReqsContainer) {
     reqs.number?.classList.toggle('is-valid', /[0-9]/.test(pass));
   });
 }
+=======
+    showToast(err.message, 'error');
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+/* ================= VALIDAÇÃO DE SENHA EM TEMPO REAL ================= */
+const registerPasswordInput = document.getElementById('registerPassword');
+const passwordReqsContainer = document.getElementById('password-reqs');
+
+if (registerPasswordInput && passwordReqsContainer) {
+  const reqs = {
+    length: $('[data-req="length"]', passwordReqsContainer),
+    case:   $('[data-req="case"]', passwordReqsContainer),
+    number: $('[data-req="number"]', passwordReqsContainer),
+  };
+
+  registerPasswordInput.addEventListener('input', () => {
+    const pass = registerPasswordInput.value;
+    const hasMinLength = pass.length >= 8;
+    reqs.length.classList.toggle('is-valid', hasMinLength);
+    const hasUpperCase = /[A-Z]/.test(pass);
+    reqs.case.classList.toggle('is-valid', hasUpperCase);
+    const hasNumber = /[0-9]/.test(pass);
+    reqs.number.classList.toggle('is-valid', hasNumber);
+  });
+}
+>>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
