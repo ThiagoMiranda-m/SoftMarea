@@ -8,10 +8,10 @@ const pool = mysql.createPool({
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-});
-
+  // A configuração SSL deve estar aqui dentro
   ssl: {
     rejectUnauthorized: false
   }
+});
 
 module.exports = pool;

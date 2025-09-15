@@ -146,8 +146,7 @@ exports.forgotPassword = async (req, res) => {
     const user = rows[0];
 
     if (!user) {
-      // Por segurança, não informamos se o e-mail existe ou não.
-      return res.status(200).json({ message: 'Se um usuário com este e-mail existir, um link de redefinição será enviado.' });
+      return res.status(200).json({ message: 'Se um utilizador com este e-mail existir, um link de redefinição será enviado.' });
     }
 
     const reset_token = crypto.randomBytes(32).toString('hex');
@@ -159,9 +158,7 @@ exports.forgotPassword = async (req, res) => {
     );
 
     await sendPasswordResetEmail(user.email, reset_token);
-
-    return res.status(200).json({ message: 'Se um usuário com este e-mail existir, um link de redefinição será enviado.' });
-
+    return res.status(200).json({ message: 'Se um utilizador com este e-mail existir, um link de redefinição será enviado.' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
@@ -176,17 +173,17 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
     }
 
-    // Valida a nova senha com as regras de negócio
     if (!isPasswordValid(password)) {
-      return res.status(400).json({
-        error: 'A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um número.'
-      });
+      return res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um número.' });
     }
 
-    const [rows] = await pool.query('SELECT * FROM users WHERE reset_token = ? AND reset_token_expires_at > NOW()', [token]);
+    // PASSO 1: Encontra o utilizador APENAS pelo token, sem verificar a data no SQL.
+    const [rows] = await pool.query('SELECT * FROM users WHERE reset_token = ?', [token]);
     const user = rows[0];
 
-    if (!user) {
+    // PASSO 2: Agora, verificamos o token e a data de expiração no JavaScript.
+    // Isto evita qualquer problema de fuso horário com o banco de dados.
+    if (!user || new Date() > new Date(user.reset_token_expires_at)) {
       return res.status(400).json({ error: 'Token de redefinição inválido ou expirado.' });
     }
 
@@ -198,7 +195,6 @@ exports.resetPassword = async (req, res) => {
     );
 
     return res.status(200).json({ message: 'Senha redefinida com sucesso!' });
-
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });

@@ -1,21 +1,24 @@
 "use strict";
 
 /* =================== LÓGICA DA PÁGINA DE REDEFINIÇÃO DE SENHA =================== */
-
-// Helper para selecionar elementos (precisamos dele aqui também)
 const $ = (s, el = document) => el.querySelector(s);
 
 const form = $('#form-reset-password');
-const newPasswordInput = $('#newPassword'); // O ID correto do input de senha nesta página
+const newPasswordInput = $('#newPassword');
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   const password = new FormData(form).get('password');
 
   if (!token) {
     alert('Erro: Token de redefinição não encontrado na URL.');
+    submitButton.disabled = false;
     return;
   }
 
@@ -32,6 +35,7 @@ form.addEventListener('submit', async e => {
     form.innerHTML = '<p style="text-align: center;">Senha alterada com sucesso!</p>';
   } catch (err) {
     alert(`Erro: ${err.message}`);
+    submitButton.disabled = false;
   }
 });
 
@@ -40,7 +44,6 @@ form.addEventListener('submit', async e => {
 const passwordReqsContainer = $('#password-reqs');
 
 if (newPasswordInput && passwordReqsContainer) {
-  // Recria os requisitos no JS para garantir que existam
   passwordReqsContainer.innerHTML = `
     <div class="req" data-req="length"><span class="req__bullet"></span> Mínimo 8 caracteres</div>
     <div class="req" data-req="case"><span class="req__bullet"></span> Uma letra maiúscula</div>
