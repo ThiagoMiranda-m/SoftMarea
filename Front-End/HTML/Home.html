@@ -42,9 +42,15 @@
       <button class="logo-btn" aria-label="Ford"><img src="../Midias/Logo Ford.png" alt="Ford"></button>
       <div class="panel__content">
         <div class="stack">
-          <input class="field brand-input" placeholder="Marca (pré-selecionada)" />
-          <input class="field" placeholder="Modelo" />
-          <input class="field" placeholder="Ano" />
+          <!-- Marca imutável -->
+          <input class="field brand-input" placeholder="Marca (pré-selecionada)" readonly aria-readonly="true" tabindex="-1" />
+          <!-- Selects preenchidos via JS -->
+          <select class="field model-select" required>
+            <option value="" disabled selected>Modelo</option>
+          </select>
+          <select class="field year-select" required>
+            <option value="" disabled selected>Ano</option>
+          </select>
           <button class="cta">Diagnosticar problema</button>
         </div>
       </div>
@@ -58,9 +64,13 @@
       <button class="logo-btn" aria-label="Chevrolet"><img src="../Midias/Logo Chevrolet-Photoroom.png" alt="Chevrolet"></button>
       <div class="panel__content">
         <div class="stack">
-          <input class="field brand-input" placeholder="Marca (pré-selecionada)" />
-          <input class="field" placeholder="Modelo" />
-          <input class="field" placeholder="Ano" />
+          <input class="field brand-input" placeholder="Marca (pré-selecionada)" readonly aria-readonly="true" tabindex="-1" />
+          <select class="field model-select" required>
+            <option value="" disabled selected>Modelo</option>
+          </select>
+          <select class="field year-select" required>
+            <option value="" disabled selected>Ano</option>
+          </select>
           <button class="cta">Diagnosticar problema</button>
         </div>
       </div>
@@ -74,9 +84,13 @@
       <button class="logo-btn" aria-label="Toyota"><img src="../Midias/Logo Toyota-Photoroom.png" alt="Toyota"></button>
       <div class="panel__content">
         <div class="stack">
-          <input class="field brand-input" placeholder="Marca (pré-selecionada)" />
-          <input class="field" placeholder="Modelo" />
-          <input class="field" placeholder="Ano" />
+          <input class="field brand-input" placeholder="Marca (pré-selecionada)" readonly aria-readonly="true" tabindex="-1" />
+          <select class="field model-select" required>
+            <option value="" disabled selected>Modelo</option>
+          </select>
+          <select class="field year-select" required>
+            <option value="" disabled selected>Ano</option>
+          </select>
           <button class="cta">Diagnosticar problema</button>
         </div>
       </div>
@@ -90,9 +104,13 @@
       <button class="logo-btn" aria-label="Honda"><img src="../Midias/Logo Honda.png" alt="Honda"></button>
       <div class="panel__content">
         <div class="stack">
-          <input class="field brand-input" placeholder="Marca (pré-selecionada)" />
-          <input class="field" placeholder="Modelo" />
-          <input class="field" placeholder="Ano" />
+          <input class="field brand-input" placeholder="Marca (pré-selecionada)" readonly aria-readonly="true" tabindex="-1" />
+          <select class="field model-select" required>
+            <option value="" disabled selected>Modelo</option>
+          </select>
+          <select class="field year-select" required>
+            <option value="" disabled selected>Ano</option>
+          </select>
           <button class="cta">Diagnosticar problema</button>
         </div>
       </div>
@@ -106,9 +124,13 @@
       <button class="logo-btn" aria-label="Volkswagen"><img src="../Midias/Logo Volks-Photoroom.png" alt="Volkswagen"></button>
       <div class="panel__content">
         <div class="stack">
-          <input class="field brand-input" placeholder="Marca (pré-selecionada)" />
-          <input class="field" placeholder="Modelo" />
-          <input class="field" placeholder="Ano" />
+          <input class="field brand-input" placeholder="Marca (pré-selecionada)" readonly aria-readonly="true" tabindex="-1" />
+          <select class="field model-select" required>
+            <option value="" disabled selected>Modelo</option>
+          </select>
+          <select class="field year-select" required>
+            <option value="" disabled selected>Ano</option>
+          </select>
           <button class="cta">Diagnosticar problema</button>
         </div>
       </div>
@@ -122,9 +144,13 @@
       <button class="logo-btn" aria-label="Fiat"><img src="../Midias/Logo Fiat-Photoroom.png" alt="Fiat"></button>
       <div class="panel__content">
         <div class="stack">
-          <input class="field brand-input" placeholder="Marca (pré-selecionada)" />
-          <input class="field" placeholder="Modelo" />
-          <input class="field" placeholder="Ano" />
+          <input class="field brand-input" placeholder="Marca (pré-selecionada)" readonly aria-readonly="true" tabindex="-1" />
+          <select class="field model-select" required>
+            <option value="" disabled selected>Modelo</option>
+          </select>
+          <select class="field year-select" required>
+            <option value="" disabled selected>Ano</option>
+          </select>
           <button class="cta">Diagnosticar problema</button>
         </div>
       </div>
@@ -170,7 +196,7 @@
           <label>Senha
             <input class="field field--light" type="password" name="password" required placeholder="••••••••">
           </label>
-              <a href="#" id="btnForgotPassword" class="forgot-password-link">Esqueci minha senha</a>
+          <a href="#" id="btnForgotPassword" class="forgot-password-link">Esqueci minha senha</a>
           <button class="cta cta--block" type="submit">Entrar</button>
         </form>
 
@@ -201,7 +227,7 @@
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
       <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
 
-      <header class="modal__header"><h2 id="registerTitle">Criar conta</h2></header>
+    <header class="modal__header"><h2 id="registerTitle">Criar conta</h2></header>
 
       <section class="modal__content">
         <form id="form-register" class="auth-form" autocomplete="on">
@@ -237,39 +263,41 @@
     </div>
   </div>
 
+  <!-- =================== MODAL: VERIFICAR CÓDIGO =================== -->
   <div class="modal" id="verifyCodeModal" aria-hidden="true">
-  <div class="modal__backdrop" data-close></div>
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
-    <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
-    <header class="modal__header"><h2 id="verifyTitle">Verificar E-mail</h2></header>
-    <section class="modal__content">
-      <p style="text-align: center; margin-bottom: 16px;">Enviamos um código de 6 dígitos para o seu e-mail. Por favor, insira-o abaixo.</p>
-      <form id="form-verify-code" class="auth-form">
-        <label>Código de Verificação
-          <input class="field field--light" type="text" name="code" required placeholder="123456" maxlength="6">
-        </label>
-        <button class="cta cta--block" type="submit">Verificar e Concluir</button>
-      </form>
-    </section>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="verifyTitle">Verificar E-mail</h2></header>
+      <section class="modal__content">
+        <p style="text-align: center; margin-bottom: 16px;">Enviamos um código de 6 dígitos para o seu e-mail. Por favor, insira-o abaixo.</p>
+        <form id="form-verify-code" class="auth-form">
+          <label>Código de Verificação
+            <input class="field field--light" type="text" name="code" required placeholder="123456" maxlength="6">
+          </label>
+          <button class="cta cta--block" type="submit">Verificar e Concluir</button>
+        </form>
+      </section>
+    </div>
   </div>
-</div>
+
   <!-- =================== MODAL: ESQUECI MINHA SENHA =================== -->
-<div class="modal" id="forgotPasswordModal" aria-hidden="true">
-  <div class="modal__backdrop" data-close></div>
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
-    <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
-    <header class="modal__header"><h2 id="forgotTitle">Redefinir Senha</h2></header>
-    <section class="modal__content">
-      <p style="text-align: center; margin-bottom: 16px;">Insira seu e-mail e enviaremos um link para você redefinir sua senha.</p>
-      <form id="form-forgot-password" class="auth-form">
-        <label>Email
-          <input class="field field--light" type="email" name="email" required placeholder="seu@email.com">
-        </label>
-        <button class="cta cta--block" type="submit">Enviar Link</button>
-      </form>
-    </section>
+  <div class="modal" id="forgotPasswordModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="forgotTitle">Redefinir Senha</h2></header>
+      <section class="modal__content">
+        <p style="text-align: center; margin-bottom: 16px;">Insira seu e-mail e enviaremos um link para você redefinir sua senha.</p>
+        <form id="form-forgot-password" class="auth-form">
+          <label>Email
+            <input class="field field--light" type="email" name="email" required placeholder="seu@email.com">
+          </label>
+          <button class="cta cta--block" type="submit">Enviar Link</button>
+        </form>
+      </section>
+    </div>
   </div>
-</div>
 
   <!-- Toast / Notificação -->
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
