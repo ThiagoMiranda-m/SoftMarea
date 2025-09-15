@@ -236,6 +236,23 @@
     </div>
   </div>
 
+  <div class="modal" id="verifyCodeModal" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+    <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+    <header class="modal__header"><h2 id="verifyTitle">Verificar E-mail</h2></header>
+    <section class="modal__content">
+      <p style="text-align: center; margin-bottom: 16px;">Enviamos um código de 6 dígitos para o seu e-mail. Por favor, insira-o abaixo.</p>
+      <form id="form-verify-code" class="auth-form">
+        <label>Código de Verificação
+          <input class="field field--light" type="text" name="code" required placeholder="123456" maxlength="6">
+        </label>
+        <button class="cta cta--block" type="submit">Verificar e Concluir</button>
+      </form>
+    </section>
+  </div>
+</div>
+
   <!-- Toast / Notificação -->
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
     <span id="toastText">Mensagem</span>

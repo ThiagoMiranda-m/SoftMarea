@@ -88,12 +88,15 @@ panorama?.addEventListener('click', (ev)=>{
   activatePanel(btn.closest('.panel'));
 });
 
-/* ================= MODAIS: LOGIN e REGISTRO ================= */
-const loginModal    = $('#loginModal');
-const registerModal = $('#registerModal');
+/* ================= MODAIS: LOGIN, REGISTRO E VERIFICAÇÃO ================= */
+const loginModal      = $('#loginModal');
+const registerModal   = $('#registerModal');
+const verifyCodeModal = $('#verifyCodeModal'); // Novo modal
 
 const btnOpenLogin    = $('#btnLogin');
 const btnOpenRegister = $('#btnRegistro');
+
+let userEmailForVerification = ''; // Variável para guardar o email durante a verificação
 
 function openModal(modal){
   if(!modal) return;
@@ -106,10 +109,11 @@ function closeModal(modal){
   document.body.style.overflow = '';
 }
 
-btnOpenLogin   ?.addEventListener('click', ()=> openModal(loginModal));
+btnOpenLogin?.addEventListener('click', ()=> openModal(loginModal));
 btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
 
-[loginModal, registerModal].forEach(modal=>{
+// Atualizado para incluir o novo modal
+[loginModal, registerModal, verifyCodeModal].forEach(modal=>{
   modal?.addEventListener('click', (e)=>{
     if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal);
   });
@@ -118,7 +122,9 @@ document.addEventListener('keydown', (e)=>{
   if (e.key !== 'Escape') return;
   if (loginModal?.classList.contains('is-open'))    closeModal(loginModal);
   if (registerModal?.classList.contains('is-open')) closeModal(registerModal);
+  if (verifyCodeModal?.classList.contains('is-open')) closeModal(verifyCodeModal); // Novo
 });
+
 
 /* ================= HEADER: estado logado/deslogado ================= */
 const btnMenu       = $('#btnMenu');
@@ -129,7 +135,6 @@ const menuSair      = $('#menuSair');
 const btnLoginHdr   = $('#btnLogin');
 const btnRegistro   = $('#btnRegistro');
 
-/* --- Melhoria: usar apenas o token para saber login --- */
 function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
 function setLoggedIn(v, origin = 'login'){
   if (!v) {
@@ -178,11 +183,14 @@ document.addEventListener('keydown', (e)=>{
 menuHistorico?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); console.log('Abrir histórico'); });
 menuSair?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); setLoggedIn(false); });
 
-/* Expor para auth.js (Firebase ou outro provedor) */
-window.setLoggedIn = setLoggedIn;
-window.closeAllAuthModals = function(){ closeModal(loginModal); closeModal(registerModal); };
+// Atualizado para fechar todos os modais
+window.closeAllAuthModals = function(){
+  closeModal(loginModal);
+  closeModal(registerModal);
+  closeModal(verifyCodeModal);
+};
 
-/* ================= FORM: LOGIN E REGISTRO ================= */
+/* ================= FORM: LOGIN ================= */
 $('#form-login')?.addEventListener('submit', async e=>{
   e.preventDefault();
   const form = new FormData(e.target);
@@ -208,12 +216,15 @@ $('#form-login')?.addEventListener('submit', async e=>{
   }
 });
 
+/* ================= FORM: REGISTRO ================= */
 $('#form-register')?.addEventListener('submit', async e=>{
   e.preventDefault();
   const form = new FormData(e.target);
+  userEmailForVerification = form.get('email'); // Guarda o email para o próximo passo
+
   const body = {
     name: form.get('name'),
-    email: form.get('email'),
+    email: userEmailForVerification,
     password: form.get('password')
   };
 
@@ -226,18 +237,60 @@ $('#form-register')?.addEventListener('submit', async e=>{
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro no registro');
 
-    localStorage.setItem('sm_token', data.token || '1'); // se o backend não retornar token
-    setLoggedIn(true, 'register');
     closeModal(registerModal);
+    openModal(verifyCodeModal); // Abre o modal para inserir o código
+    showToast(data.message, 'success');
   } catch(err){
     showToast(err.message || 'Erro no registro', 'error');
   }
 });
 
-/* QoL: marca input de marca como preenchido */
-document.addEventListener('input', (e)=>{
-  const t = e.target;
-  if (!(t instanceof HTMLInputElement)) return;
-  if (!t.classList.contains('brand-input')) return;
-  t.classList.toggle('filled', !!t.value.trim());
+/* ================= FORM: VERIFICAR CÓDIGO (NOVO) ================= */
+$('#form-verify-code')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const body = {
+    email: userEmailForVerification, // Usa o email guardado
+    code: form.get('code')
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/verify-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro na verificação');
+
+    // Se o código estiver correto, o backend já retorna o token
+    localStorage.setItem('sm_token', data.token);
+    setLoggedIn(true, 'register'); // Marca como logado
+    closeModal(verifyCodeModal); // Fecha o último modal
+  } catch(err){
+    showToast(err.message || 'Erro na verificação', 'error');
+  }
 });
+
+
+/* ================= VALIDAÇÃO DE SENHA EM TEMPO REAL ================= */
+const registerPasswordInput = $('#registerPassword');
+const passwordReqsContainer = $('#password-reqs');
+
+if (registerPasswordInput && passwordReqsContainer) {
+  const reqs = {
+    length: $('[data-req="length"]', passwordReqsContainer),
+    case:   $('[data-req="case"]', passwordReqsContainer),
+    number: $('[data-req="number"]', passwordReqsContainer),
+  };
+
+  registerPasswordInput.addEventListener('input', () => {
+    const pass = registerPasswordInput.value;
+    const hasMinLength = pass.length >= 8;
+    reqs.length.classList.toggle('is-valid', hasMinLength);
+    const hasUpperCase = /[A-Z]/.test(pass);
+    reqs.case.classList.toggle('is-valid', hasUpperCase);
+    const hasNumber = /[0-9]/.test(pass);
+    reqs.number.classList.toggle('is-valid', hasNumber);
+  });
+}
