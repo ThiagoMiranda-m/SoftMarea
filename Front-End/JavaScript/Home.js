@@ -36,11 +36,10 @@ function showToast(message, type = 'success', ms = 2600){
 }
 window.showToast = showToast;
 
-/* ================= CONFIGURAÇÃO DA API ================= */
+/* ================= CONFIG DA API ================= */
 const API_URL = "http://localhost:3000/auth";
 
 /* =================== DADOS: MODELOS / ANOS =================== */
-// Modelos por marca (ajuste à vontade)
 const CAR_DATA = {
   Ford:        ["Ka", "Fiesta", "Focus", "Fusion", "EcoSport", "Ranger", "Territory", "Maverick"],
   Chevrolet:   ["Onix", "Onix Plus", "Prisma", "Cruze", "Tracker", "S10", "Montana", "Spin"],
@@ -49,8 +48,6 @@ const CAR_DATA = {
   Volkswagen:  ["Gol", "Polo", "Virtus", "T-Cross", "Nivus", "Saveiro", "Jetta"],
   Fiat:        ["Mobi", "Argo", "Cronos", "Pulse", "Fastback", "Toro", "Strada"]
 };
-
-// Gera anos (ex.: 1995..ano atual) em ordem decrescente
 function generateYears(from = 1995, to = (new Date()).getFullYear()){
   const list = [];
   for (let y = to; y >= from; y--) list.push(String(y));
@@ -61,7 +58,6 @@ const YEARS = generateYears(1995);
 /* ================= PANORAMA + LOGOS ================= */
 const panorama = $('#panorama');
 
-// Preenche o input da marca (readonly) conforme a coluna
 function fillBrand(panel){
   const brand =
     panel?.dataset?.brand ||
@@ -70,13 +66,13 @@ function fillBrand(panel){
   const el = $('.brand-input', panel);
   if(!el || !brand) return;
 
-  el.value = brand;                 // readonly no HTML
+  el.value = brand;
+  el.readOnly = true;                 // trava edição
+  el.setAttribute('aria-readonly','true');
   el.classList.add('filled');
   el.dispatchEvent(new Event('input',{bubbles:true}));
   el.dispatchEvent(new Event('change',{bubbles:true}));
 }
-
-// Preenche os <select> de Modelo e Ano dentro do painel
 function populateSelectors(panel){
   if (!panel) return;
   const brand = panel?.dataset?.brand || '';
@@ -84,27 +80,22 @@ function populateSelectors(panel){
   const yearSel  = $('.year-select', panel);
 
   if (modelSel){
-    // limpa e insere placeholder
     modelSel.innerHTML = '';
     const ph = document.createElement('option');
-    ph.value = '';
-    ph.disabled = true; ph.selected = true;
+    ph.value = ''; ph.disabled = true; ph.selected = true;
     ph.textContent = 'Modelo';
     modelSel.appendChild(ph);
 
-    const models = CAR_DATA[brand] || [];
-    models.forEach(m=>{
+    (CAR_DATA[brand] || []).forEach(m=>{
       const op = document.createElement('option');
       op.value = m; op.textContent = m;
       modelSel.appendChild(op);
     });
   }
-
   if (yearSel){
     yearSel.innerHTML = '';
     const ph = document.createElement('option');
-    ph.value = '';
-    ph.disabled = true; ph.selected = true;
+    ph.value = ''; ph.disabled = true; ph.selected = true;
     ph.textContent = 'Ano';
     yearSel.appendChild(ph);
 
@@ -115,15 +106,14 @@ function populateSelectors(panel){
     });
   }
 }
-
 function pauseAllVideos(root=document){
   $$('.panel__media video', root).forEach(v => { try{ v.pause(); }catch{} });
 }
 function playAutoplayVideo(panel){
   const v = $('.panel__media video[autoplay]', panel);
-  if (!v) return; try { v.muted = true; v.play().catch(()=>{}); } catch {}
+  if (!v) return;
+  try { v.muted = true; v.play().catch(()=>{}); } catch {}
 }
-
 function activatePanel(panel){
   if(!panel) return;
   $$('.panel.active', panorama).forEach(p=>p.classList.remove('active'));
@@ -131,15 +121,14 @@ function activatePanel(panel){
   pauseAllVideos(panorama);
   playAutoplayVideo(panel);
   fillBrand(panel);
-  populateSelectors(panel);                 // <<< popula os selects
+  populateSelectors(panel);
   try{ panel.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});}catch{}
 }
-
 document.addEventListener('DOMContentLoaded', ()=>{
   const active = $('.panel.active');
   if (active){
     fillBrand(active);
-    populateSelectors(active);              // <<< popula os selects ao carregar
+    populateSelectors(active);
     playAutoplayVideo(active);
   }
 });
@@ -148,8 +137,7 @@ panorama?.addEventListener('click', (ev)=>{
   activatePanel(btn.closest('.panel'));
 });
 
-<<<<<<< HEAD
-/* ================= MODAIS: LOGIN, REGISTRO, VERIFICAÇÃO, ESQUECI ================= */
+/* ================= MODAIS: LOGIN / REGISTRO / VERIFICAÇÃO / ESQUECI ================= */
 const loginModal          = $('#loginModal');
 const registerModal       = $('#registerModal');
 const verifyCodeModal     = $('#verifyCodeModal');
@@ -158,40 +146,21 @@ const forgotPasswordModal = $('#forgotPasswordModal');
 const btnOpenLogin        = $('#btnLogin');
 const btnOpenRegister     = $('#btnRegistro');
 const btnForgotPassword   = $('#btnForgotPassword');
-
-let userEmailForVerification = ''; // guarda o e-mail durante a verificação
-=======
-
-/* ================= MODAIS ================= */
-const loginModal          = $('#loginModal');
-const registerModal       = $('#registerModal');
-const verifyCodeModal     = $('#verifyCodeModal');
-const forgotPasswordModal = $('#forgotPasswordModal');
-
-const btnOpenLogin        = $('#btnLogin');
-const btnOpenRegister     = $('#btnRegistro');
-const btnForgotPassword   = $('#btnForgotPassword');
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 
 let userEmailForVerification = '';
 
-function openModal(modal) {
+function openModal(modal){
   if(!modal) return;
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
 }
-function closeModal(modal) {
+function closeModal(modal){
   if(!modal) return;
   modal.classList.remove('is-open');
   document.body.style.overflow = '';
 }
 
-<<<<<<< HEAD
 btnOpenLogin   ?.addEventListener('click', ()=> openModal(loginModal));
-=======
-// Eventos para abrir os modais
-btnOpenLogin?.addEventListener('click', ()=> openModal(loginModal));
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
 btnForgotPassword?.addEventListener('click', e => {
   e.preventDefault();
@@ -199,10 +168,6 @@ btnForgotPassword?.addEventListener('click', e => {
   openModal(forgotPasswordModal);
 });
 
-<<<<<<< HEAD
-=======
-// Lógica para fechar os modais
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 [loginModal, registerModal, verifyCodeModal, forgotPasswordModal].forEach(modal=>{
   modal?.addEventListener('click', (e)=>{
     if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal);
@@ -210,15 +175,10 @@ btnForgotPassword?.addEventListener('click', e => {
 });
 document.addEventListener('keydown', (e)=>{
   if (e.key !== 'Escape') return;
-<<<<<<< HEAD
   if (loginModal?.classList.contains('is-open'))          closeModal(loginModal);
   if (registerModal?.classList.contains('is-open'))       closeModal(registerModal);
   if (verifyCodeModal?.classList.contains('is-open'))     closeModal(verifyCodeModal);
   if (forgotPasswordModal?.classList.contains('is-open')) closeModal(forgotPasswordModal);
-=======
-  const openModal = $('.modal.is-open');
-  if (openModal) closeModal(openModal);
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 });
 
 /* ================= HEADER: estado logado/deslogado ================= */
@@ -230,31 +190,31 @@ const btnLoginHdr   = $('#btnLogin');
 const btnRegistro   = $('#btnRegistro');
 
 function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
-
-function setLoggedIn(v, origin = 'login') {
+function setLoggedIn(v, origin = 'login'){
   if (!v) {
     localStorage.removeItem('sm_token');
     updateAuthUI(false);
+    userMenu?.classList.remove('is-open');
+    btnMenu ?.setAttribute('aria-expanded','false');
     return;
   }
   updateAuthUI(true);
   window.closeAllAuthModals?.();
-  const msg = origin === 'register' ? 'Registado com sucesso' : 'Conectado com sucesso';
+  const msg = origin === 'register' ? 'Registrado com sucesso' : 'Conectado com sucesso';
   window.showToast?.(msg, 'success');
 }
-window.setLoggedIn = setLoggedIn; // caso outro script precise
+window.setLoggedIn = setLoggedIn;
 
-function updateAuthUI(logged) {
+function updateAuthUI(logged){
   btnRegistro?.classList.toggle('is-hidden', logged);
   btnLoginHdr?.classList.toggle('is-hidden', logged);
   btnMenu?.classList.toggle('is-hidden', !logged);
-  if (!logged) {
+  if (!logged){
     userMenu?.classList.remove('is-open');
     btnMenu?.setAttribute('aria-expanded','false');
   }
 }
 document.addEventListener('DOMContentLoaded', ()=> updateAuthUI(isLoggedIn()));
-<<<<<<< HEAD
 
 btnMenu?.addEventListener('click', (e)=>{
   const open = userMenu.classList.toggle('is-open');
@@ -284,11 +244,6 @@ menuSair?.addEventListener('click', ()=>{
   setLoggedIn(false);
 });
 
-// util: fechar todos os modais
-=======
-menuSair?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); setLoggedIn(false); });
-
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 window.closeAllAuthModals = function(){
   closeModal(loginModal);
   closeModal(registerModal);
@@ -299,17 +254,12 @@ window.closeAllAuthModals = function(){
 /* ================= FORM: LOGIN ================= */
 $('#form-login')?.addEventListener('submit', async e=>{
   e.preventDefault();
-<<<<<<< HEAD
-  const form = new FormData(e.target);
-  const body = { email: form.get('email'), password: form.get('password') };
-=======
   const form = e.target;
   const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
+  if (submitButton) submitButton.disabled = true;
 
   const formData = new FormData(form);
   const body = { email: formData.get('email'), password: formData.get('password') };
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
 
   try {
     const res = await fetch(`${API_URL}/login`, {
@@ -322,24 +272,20 @@ $('#form-login')?.addEventListener('submit', async e=>{
 
     localStorage.setItem('sm_token', data.token);
     setLoggedIn(true, 'login');
+    closeModal(loginModal);
   } catch(err){
     showToast(err.message || 'Erro no login', 'error');
   } finally {
-    submitButton.disabled = false;
+    if (submitButton) submitButton.disabled = false;
   }
 });
 
 /* ================= FORM: REGISTRO ================= */
 $('#form-register')?.addEventListener('submit', async e=>{
   e.preventDefault();
-<<<<<<< HEAD
-  const form = new FormData(e.target);
-  userEmailForVerification = form.get('email'); // guarda e-mail
-=======
   const form = e.target;
   const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
+  if (submitButton) submitButton.disabled = true;
 
   const formData = new FormData(form);
   userEmailForVerification = formData.get('email');
@@ -356,39 +302,27 @@ $('#form-register')?.addEventListener('submit', async e=>{
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro no registo');
+    if (!res.ok) throw new Error(data.error || 'Erro no registro');
 
     closeModal(registerModal);
     openModal(verifyCodeModal);
-<<<<<<< HEAD
     showToast(data.message || 'Código enviado para o e-mail', 'success');
-=======
-    showToast(data.message, 'success');
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
   } catch(err){
-    showToast(err.message || 'Erro no registo', 'error');
+    showToast(err.message || 'Erro no registro', 'error');
   } finally {
-    submitButton.disabled = false;
+    if (submitButton) submitButton.disabled = false;
   }
 });
 
 /* ================= FORM: VERIFICAR CÓDIGO ================= */
 $('#form-verify-code')?.addEventListener('submit', async e=>{
   e.preventDefault();
-<<<<<<< HEAD
-  const form = new FormData(e.target);
-  const body = { email: userEmailForVerification, code: form.get('code') };
-=======
   const form = e.target;
   const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
+  if (submitButton) submitButton.disabled = true;
 
   const formData = new FormData(form);
-  const body = {
-    email: userEmailForVerification,
-    code: formData.get('code')
-  };
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
+  const body = { email: userEmailForVerification, code: formData.get('code') };
 
   try {
     const res = await fetch(`${API_URL}/verify-code`, {
@@ -401,14 +335,11 @@ $('#form-verify-code')?.addEventListener('submit', async e=>{
 
     localStorage.setItem('sm_token', data.token);
     setLoggedIn(true, 'register');
-<<<<<<< HEAD
     closeModal(verifyCodeModal);
-=======
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
   } catch(err){
     showToast(err.message || 'Erro na verificação', 'error');
   } finally {
-    submitButton.disabled = false;
+    if (submitButton) submitButton.disabled = false;
   }
 });
 
@@ -417,7 +348,7 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
   e.preventDefault();
   const form = e.target;
   const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
+  if (submitButton) submitButton.disabled = true;
 
   const formData = new FormData(form);
   const body = { email: formData.get('email') };
@@ -434,19 +365,13 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
     closeModal(forgotPasswordModal);
     showToast(data.message || 'E-mail enviado com sucesso', 'success', 4000);
   } catch (err) {
-<<<<<<< HEAD
     showToast(err.message || 'Erro ao enviar o e-mail', 'error');
+  } finally {
+    if (submitButton) submitButton.disabled = false;
   }
 });
 
-// Abre o modal "Esqueci a senha" a partir do Login
-btnForgotPassword?.addEventListener('click', e => {
-  e.preventDefault();
-  closeModal(loginModal);
-  openModal(forgotPasswordModal);
-});
-
-/* ===== Validação de senha em tempo real (opcional; só funciona se IDs existirem no HTML) ===== */
+/* ===== Validação de senha em tempo real (opcional; exige IDs no HTML) ===== */
 const registerPasswordInput = $('#registerPassword');
 const passwordReqsContainer = $('#password-reqs');
 if (registerPasswordInput && passwordReqsContainer) {
@@ -462,32 +387,3 @@ if (registerPasswordInput && passwordReqsContainer) {
     reqs.number?.classList.toggle('is-valid', /[0-9]/.test(pass));
   });
 }
-=======
-    showToast(err.message, 'error');
-  } finally {
-    submitButton.disabled = false;
-  }
-});
-
-/* ================= VALIDAÇÃO DE SENHA EM TEMPO REAL ================= */
-const registerPasswordInput = document.getElementById('registerPassword');
-const passwordReqsContainer = document.getElementById('password-reqs');
-
-if (registerPasswordInput && passwordReqsContainer) {
-  const reqs = {
-    length: $('[data-req="length"]', passwordReqsContainer),
-    case:   $('[data-req="case"]', passwordReqsContainer),
-    number: $('[data-req="number"]', passwordReqsContainer),
-  };
-
-  registerPasswordInput.addEventListener('input', () => {
-    const pass = registerPasswordInput.value;
-    const hasMinLength = pass.length >= 8;
-    reqs.length.classList.toggle('is-valid', hasMinLength);
-    const hasUpperCase = /[A-Z]/.test(pass);
-    reqs.case.classList.toggle('is-valid', hasUpperCase);
-    const hasNumber = /[0-9]/.test(pass);
-    reqs.number.classList.toggle('is-valid', hasNumber);
-  });
-}
->>>>>>> 3499af7e701e7d2111debc8ea82c5bb84202922f
