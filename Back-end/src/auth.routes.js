@@ -10,6 +10,7 @@ router.post('/register', ctrl.register);
 router.post('/verify-code', ctrl.verifyCode);
 router.post('/login', ctrl.login);
 router.get('/me', auth, ctrl.me);
+router.post('/phone-signin', ctrl.phoneSignIn);
 
 // Rotas para esquecer a senha
 router.post('/forgot-password', ctrl.forgotPassword);
@@ -37,5 +38,6 @@ router.get('/google/callback',
     res.redirect(redirectUrl);
   }
 );
+
 
 module.exports = router;

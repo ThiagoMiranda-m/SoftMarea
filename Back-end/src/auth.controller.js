@@ -3,6 +3,12 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const pool = require('./db');
 const {sendVerificationCode, sendPasswordResetEmail } = require('./email');
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
@@ -197,5 +203,34 @@ exports.resetPassword = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
+  }
+};
+
+exports.phoneSignIn = async (req, res) => {
+  try {
+    const { firebaseToken } = req.body;
+    const decodedToken = await admin.auth().verifyIdToken(firebaseToken);
+    const phoneNumber = decodedToken.phone_number;
+
+    let [rows] = await pool.query('SELECT * FROM users WHERE phone_number = ?', [phoneNumber]);
+    let user = rows[0];
+
+    if (!user) {
+      // Se não existe, cria um novo utilizador
+      const [result] = await pool.query(
+        'INSERT INTO users (phone_number, is_verified) VALUES (?, ?)',
+        [phoneNumber, true] // Login com telefone já é verificado
+      );
+      [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
+      user = rows[0];
+    }
+    
+    // Gera o nosso próprio token JWT para a nossa aplicação
+    const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    return res.json({ token });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro na autenticação com telefone.' });
   }
 };

@@ -4,6 +4,19 @@
 const $  = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
+const firebaseConfig = {
+  apiKey: "AIzaSyCD7RMisuimpkztH2N-eFMSB4XuuLSPaNs",
+  authDomain: "softmarea-7eba0.firebaseapp.com",
+  projectId: "softmarea-7eba0",
+  storageBucket: "softmarea-7eba0.firebasestorage.app",
+  messagingSenderId: "44251087941",
+  appId: "1:44251087941:web:d5444c12c8f251731ecf2c",
+  measurementId: "G-GR082GLZY0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 // Função para ler o cookie, necessária para o login com Google
 function getCookie(name) {
   const value = `; ${document.cookie}`;
@@ -119,10 +132,12 @@ const loginModal          = $('#loginModal');
 const registerModal       = $('#registerModal');
 const verifyCodeModal     = $('#verifyCodeModal');
 const forgotPasswordModal = $('#forgotPasswordModal');
+const phoneAuthModal = $('#phoneAuthModal');
 
 const btnOpenLogin        = $('#btnLogin');
 const btnOpenRegister     = $('#btnRegistro');
 const btnForgotPassword   = $('#btnForgotPassword');
+const btnOpenPhoneLogin = $('#btnOpenPhoneLogin');
 
 let userEmailForVerification = '';
 
@@ -155,6 +170,14 @@ document.addEventListener('keydown', (e)=>{
   const openModal = $('.modal.is-open');
   if (openModal) closeModal(openModal);
 });
+
+btnOpenPhoneLogin?.addEventListener('click', () => {
+  closeAllAuthModals();
+  openModal(phoneAuthModal);
+  // Inicializa o reCAPTCHA visível
+  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+});
+
 
 /* ================= HEADER: estado logado/deslogado ================= */
 const btnMenu       = $('#btnMenu');
@@ -322,6 +345,59 @@ $('#form-verify-code')?.addEventListener('submit', async e=>{
     showToast(err.message || 'Erro na verificação', 'error');
   } finally {
     if (submitButton) submitButton.disabled = false;
+  }
+});
+
+/* ================= FORM: LOGIN COM TELEFONE (NOVO) ================= */
+const formSendCode = $('#form-phone-send-code');
+const formVerifyCode = $('#form-phone-verify-code');
+
+formSendCode?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const phoneNumber = new FormData(formSendCode).get('phone');
+  const appVerifier = window.recaptchaVerifier;
+
+  try {
+    const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+    window.confirmationResult = confirmationResult;
+    
+    // Esconde o formulário de enviar número e mostra o de verificar código
+    formSendCode.classList.add('is-hidden');
+    formVerifyCode.classList.remove('is-hidden');
+    showToast('Código SMS enviado!', 'success');
+  } catch (err) {
+    showToast(`Erro ao enviar código: ${err.message}`, 'error');
+    grecaptcha.reset(window.recaptchaWidgetId);
+  }
+});
+
+formVerifyCode?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const code = new FormData(formVerifyCode).get('code');
+
+  try {
+    const result = await window.confirmationResult.confirm(code);
+    const firebaseUser = result.user;
+    
+    // Pega o token do Firebase para validar no nosso back-end
+    const firebaseToken = await firebaseUser.getIdToken();
+    
+    // Envia o token para o nosso back-end
+    const res = await fetch(`${API_URL}/phone-signin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firebaseToken })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // O nosso back-end retorna o nosso próprio token (sm_token)
+    localStorage.setItem('sm_token', data.token);
+    setLoggedIn(true, 'login');
+    closeModal(phoneAuthModal);
+
+  } catch (err) {
+    showToast(`Erro ao verificar código: ${err.message}`, 'error');
   }
 });
 
