@@ -4,6 +4,14 @@
 const $  = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
+// Função para ler o cookie, necessária para o login com Google
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+
 /* ========= Toast / Notificação ========= */
 let toast = document.getElementById('toast');
 let toastText = document.getElementById('toastText');
@@ -11,17 +19,12 @@ let toastTimer = null;
 
 function ensureToast(){
   if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.className = 'toast';
-    toastText = document.createElement('span');
-    toastText.id = 'toastText';
-    toast.appendChild(toastText);
-    document.body.appendChild(toast);
+    toast = document.createElement('div'); toast.id = 'toast'; toast.className = 'toast';
+    toastText = document.createElement('span'); toastText.id = 'toastText';
+    toast.appendChild(toastText); document.body.appendChild(toast);
   }
   if (!toastText) {
-    toastText = document.createElement('span');
-    toastText.id = 'toastText';
+    toastText = document.createElement('span'); toastText.id = 'toastText';
     toast.appendChild(toastText);
   }
 }
@@ -36,7 +39,7 @@ function showToast(message, type = 'success', ms = 2600){
 }
 window.showToast = showToast;
 
-/* ================= CONFIG DA API ================= */
+/* ================= CONFIGURAÇÃO DA API ================= */
 const API_URL = "http://localhost:3000/auth";
 
 /* =================== DADOS: MODELOS / ANOS =================== */
@@ -59,19 +62,11 @@ const YEARS = generateYears(1995);
 const panorama = $('#panorama');
 
 function fillBrand(panel){
-  const brand =
-    panel?.dataset?.brand ||
-    $('.logo-btn', panel)?.getAttribute('aria-label') ||
-    $('.logo-btn img', panel)?.alt || '';
+  const brand = panel?.dataset?.brand || '';
   const el = $('.brand-input', panel);
   if(!el || !brand) return;
-
   el.value = brand;
-  el.readOnly = true;                 // trava edição
-  el.setAttribute('aria-readonly','true');
   el.classList.add('filled');
-  el.dispatchEvent(new Event('input',{bubbles:true}));
-  el.dispatchEvent(new Event('change',{bubbles:true}));
 }
 function populateSelectors(panel){
   if (!panel) return;
@@ -80,12 +75,7 @@ function populateSelectors(panel){
   const yearSel  = $('.year-select', panel);
 
   if (modelSel){
-    modelSel.innerHTML = '';
-    const ph = document.createElement('option');
-    ph.value = ''; ph.disabled = true; ph.selected = true;
-    ph.textContent = 'Modelo';
-    modelSel.appendChild(ph);
-
+    modelSel.innerHTML = '<option value="" disabled selected>Modelo</option>';
     (CAR_DATA[brand] || []).forEach(m=>{
       const op = document.createElement('option');
       op.value = m; op.textContent = m;
@@ -93,12 +83,7 @@ function populateSelectors(panel){
     });
   }
   if (yearSel){
-    yearSel.innerHTML = '';
-    const ph = document.createElement('option');
-    ph.value = ''; ph.disabled = true; ph.selected = true;
-    ph.textContent = 'Ano';
-    yearSel.appendChild(ph);
-
+    yearSel.innerHTML = '<option value="" disabled selected>Ano</option>';
     YEARS.forEach(y=>{
       const op = document.createElement('option');
       op.value = y; op.textContent = y;
@@ -124,20 +109,12 @@ function activatePanel(panel){
   populateSelectors(panel);
   try{ panel.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});}catch{}
 }
-document.addEventListener('DOMContentLoaded', ()=>{
-  const active = $('.panel.active');
-  if (active){
-    fillBrand(active);
-    populateSelectors(active);
-    playAutoplayVideo(active);
-  }
-});
 panorama?.addEventListener('click', (ev)=>{
   const btn = ev.target.closest('.logo-btn'); if(!btn) return;
   activatePanel(btn.closest('.panel'));
 });
 
-/* ================= MODAIS: LOGIN / REGISTRO / VERIFICAÇÃO / ESQUECI ================= */
+/* ================= MODAIS ================= */
 const loginModal          = $('#loginModal');
 const registerModal       = $('#registerModal');
 const verifyCodeModal     = $('#verifyCodeModal');
@@ -160,7 +137,7 @@ function closeModal(modal){
   document.body.style.overflow = '';
 }
 
-btnOpenLogin   ?.addEventListener('click', ()=> openModal(loginModal));
+btnOpenLogin?.addEventListener('click', ()=> openModal(loginModal));
 btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
 btnForgotPassword?.addEventListener('click', e => {
   e.preventDefault();
@@ -175,10 +152,8 @@ btnForgotPassword?.addEventListener('click', e => {
 });
 document.addEventListener('keydown', (e)=>{
   if (e.key !== 'Escape') return;
-  if (loginModal?.classList.contains('is-open'))          closeModal(loginModal);
-  if (registerModal?.classList.contains('is-open'))       closeModal(registerModal);
-  if (verifyCodeModal?.classList.contains('is-open'))     closeModal(verifyCodeModal);
-  if (forgotPasswordModal?.classList.contains('is-open')) closeModal(forgotPasswordModal);
+  const openModal = $('.modal.is-open');
+  if (openModal) closeModal(openModal);
 });
 
 /* ================= HEADER: estado logado/deslogado ================= */
@@ -189,18 +164,34 @@ const menuSair      = $('#menuSair');
 const btnLoginHdr   = $('#btnLogin');
 const btnRegistro   = $('#btnRegistro');
 
-function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
+// FUNÇÃO isLoggedIn ATUALIZADA
+function isLoggedIn(){
+  // 1. Procura pelo token na URL (enviado pelo login com Google)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('token');
+
+  if (urlToken) {
+    // 2. Se encontrar, guarda no localStorage
+    localStorage.setItem('sm_token', urlToken);
+    
+    // 3. Limpa a URL para que o token não fique visível
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  
+  // 4. Agora, verifica o localStorage como antes
+  return !!localStorage.getItem('sm_token');
+}
+
+
 function setLoggedIn(v, origin = 'login'){
   if (!v) {
     localStorage.removeItem('sm_token');
     updateAuthUI(false);
-    userMenu?.classList.remove('is-open');
-    btnMenu ?.setAttribute('aria-expanded','false');
     return;
   }
   updateAuthUI(true);
   window.closeAllAuthModals?.();
-  const msg = origin === 'register' ? 'Registrado com sucesso' : 'Conectado com sucesso';
+  const msg = origin === 'register' ? 'Registado com sucesso' : 'Conectado com sucesso';
   window.showToast?.(msg, 'success');
 }
 window.setLoggedIn = setLoggedIn;
@@ -214,7 +205,6 @@ function updateAuthUI(logged){
     btnMenu?.setAttribute('aria-expanded','false');
   }
 }
-document.addEventListener('DOMContentLoaded', ()=> updateAuthUI(isLoggedIn()));
 
 btnMenu?.addEventListener('click', (e)=>{
   const open = userMenu.classList.toggle('is-open');
@@ -226,12 +216,6 @@ document.addEventListener('click', (e)=>{
   const inside = e.target.closest('#userMenu, #btnMenu');
   if (!inside){
     userMenu.classList.remove('is-open');
-    btnMenu?.setAttribute('aria-expanded','false');
-  }
-});
-document.addEventListener('keydown', (e)=>{
-  if (e.key === 'Escape'){
-    userMenu?.classList.remove('is-open');
     btnMenu?.setAttribute('aria-expanded','false');
   }
 });
@@ -272,7 +256,6 @@ $('#form-login')?.addEventListener('submit', async e=>{
 
     localStorage.setItem('sm_token', data.token);
     setLoggedIn(true, 'login');
-    closeModal(loginModal);
   } catch(err){
     showToast(err.message || 'Erro no login', 'error');
   } finally {
@@ -302,13 +285,13 @@ $('#form-register')?.addEventListener('submit', async e=>{
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro no registro');
+    if (!res.ok) throw new Error(data.error || 'Erro no registo');
 
     closeModal(registerModal);
     openModal(verifyCodeModal);
     showToast(data.message || 'Código enviado para o e-mail', 'success');
   } catch(err){
-    showToast(err.message || 'Erro no registro', 'error');
+    showToast(err.message || 'Erro no registo', 'error');
   } finally {
     if (submitButton) submitButton.disabled = false;
   }
@@ -335,7 +318,6 @@ $('#form-verify-code')?.addEventListener('submit', async e=>{
 
     localStorage.setItem('sm_token', data.token);
     setLoggedIn(true, 'register');
-    closeModal(verifyCodeModal);
   } catch(err){
     showToast(err.message || 'Erro na verificação', 'error');
   } finally {
@@ -371,9 +353,10 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
   }
 });
 
-/* ===== Validação de senha em tempo real (opcional; exige IDs no HTML) ===== */
-const registerPasswordInput = $('#registerPassword');
-const passwordReqsContainer = $('#password-reqs');
+/* ===== Validação de senha em tempo real ===== */
+const registerPasswordInput = document.getElementById('registerPassword');
+const passwordReqsContainer = document.getElementById('password-reqs');
+
 if (registerPasswordInput && passwordReqsContainer) {
   const reqs = {
     length: $('[data-req="length"]', passwordReqsContainer),
@@ -387,3 +370,22 @@ if (registerPasswordInput && passwordReqsContainer) {
     reqs.number?.classList.toggle('is-valid', /[0-9]/.test(pass));
   });
 }
+
+
+// =================== LÓGICA DE INICIALIZAÇÃO DA PÁGINA ===================
+document.addEventListener('DOMContentLoaded', ()=> {
+  // 1. Ativa o painel inicial (carros)
+  const activePanel = $('.panel.active');
+  if (activePanel){
+    fillBrand(activePanel);
+    populateSelectors(activePanel);
+    playAutoplayVideo(activePanel);
+  }
+  
+  // 2. Verifica o estado de login (agora deteta o token da URL)
+  if (isLoggedIn()) {
+    setLoggedIn(true, 'login');
+  } else {
+    updateAuthUI(false);
+  }
+});

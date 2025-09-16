@@ -2,11 +2,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const pool = require('./db');
-const {sendVerificationCode, sendPasswordResetEmail } = require('./email'); // Linha corrigida
+const {sendVerificationCode, sendPasswordResetEmail } = require('./email');
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
-// Função para validar a senha com as novas regras
 const isPasswordValid = (password) => {
   const hasUpperCase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
