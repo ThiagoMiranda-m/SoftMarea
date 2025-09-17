@@ -179,7 +179,9 @@ exports.resetPassword = async (req, res) => {
     }
 
     if (!isPasswordValid(password)) {
-      return res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um número.' });
+      return res.status(400).json({
+        error: 'A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um número.'
+      });
     }
 
     // PASSO 1: Encontra o utilizador APENAS pelo token, sem verificar a data no SQL.
@@ -209,6 +211,10 @@ exports.resetPassword = async (req, res) => {
 exports.phoneSignIn = async (req, res) => {
   try {
     const { firebaseToken } = req.body;
+    if (!firebaseToken) {
+      return res.status(400).json({ error: 'Firebase token é obrigatório.' });
+    }
+
     const decodedToken = await admin.auth().verifyIdToken(firebaseToken);
     const phoneNumber = decodedToken.phone_number;
 
@@ -216,21 +222,29 @@ exports.phoneSignIn = async (req, res) => {
     let user = rows[0];
 
     if (!user) {
-      // Se não existe, cria um novo utilizador
+      // Se o utilizador não existe, cria um novo.
       const [result] = await pool.query(
-        'INSERT INTO users (phone_number, is_verified) VALUES (?, ?)',
-        [phoneNumber, true] // Login com telefone já é verificado
+        'INSERT INTO users (phone_number, name, email, is_verified) VALUES (?, ?, ?, ?)',
+        [phoneNumber, phoneNumber, null, true] // A LINHA MAIS IMPORTANTE
       );
+
+      // Busca o utilizador que acabamos de criar para obter o ID.
       [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
       user = rows[0];
     }
     
-    // Gera o nosso próprio token JWT para a nossa aplicação
-    const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    return res.json({ token });
+    // Gera o nosso próprio token JWT para a nossa aplicação.
+    const token = jwt.sign(
+      { sub: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+    );
+
+    return res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
 
   } catch (err) {
-    console.error(err);
+    // IMPORTANTE: Veja o erro no console do servidor!
+    console.error("Erro detalhado em phoneSignIn:", err);
     return res.status(500).json({ error: 'Erro na autenticação com telefone.' });
   }
 };

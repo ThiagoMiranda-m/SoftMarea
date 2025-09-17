@@ -40,7 +40,7 @@ passport.use(new GoogleStrategy({
       return done(err, null);
     }
   }
-)); // A correção foi aqui, removendo um ')' extra
+));
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
