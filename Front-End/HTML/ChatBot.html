@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SoftMarea • Diagnóstico</title>
+
+  <!-- CSS base do site -->
+  <link rel="stylesheet" href="../Css/Home.css" />
+  <!-- CSS desta página -->
+  <link rel="stylesheet" href="../Css/ChatBot.css" />
+
+  <!-- Leaflet (mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <!-- Header igual ao da home -->
+  <header class="header">
+    <div class="header__brand">
+      <img class="img-logo" src="../Midias/Logo Site-Photoroom.png" alt="">
+    </div>
+    <nav class="header__actions">
+      <button class="btn" id="btnRegistro">Registro</button>
+      <button class="btn" id="btnLogin">Login</button>
+      <button class="hamburger is-hidden" id="btnMenu" aria-label="Menu" aria-haspopup="true" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="menu-popover" id="userMenu" role="menu" aria-label="Menu do usuário">
+        <button class="menu-item" id="menuHistorico" role="menuitem">Histórico</button>
+        <button class="menu-item" id="menuSair" role="menuitem">Sair</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Botão FIXO abaixo do header -->
+  <a class="back-btn back-fixed" href="../HTML/Home.html">Voltar à seleção do veículo</a>
+
+  <section class="chat-section">
+    <div class="chat-layout" id="chatLayout">
+      <!-- Chat -->
+      <article class="chat-card">
+        <h2 class="chat-title" id="caseTitle">Diagnóstico</h2>
+        <p class="chat-sub" id="caseSub">Descreva o problema que está acontecendo com o veículo.</p>
+
+        <!-- ***** APENAS O BLOCO DO CHAT FOI TROCADO ***** -->
+
+        <!-- Mensagens -->
+        <div class="sm-chat__scroll" id="chatBox" aria-live="polite">
+          <div class="sm-msg bot">Olá! Conte o que está acontecendo com o carro e vou te guiar passo a passo.</div>
+        </div>
+
+        <!-- Composer + botão do mapa -->
+        <div class="sm-chat__actions">
+          <form id="composer" class="sm-composer" autocomplete="off">
+            <input
+              id="composerInput"
+              class="sm-composer__input"
+              type="text"
+              placeholder="Digite sua mensagem e pressione Enter…"
+              aria-label="Mensagem para o assistente"
+              required
+            />
+            <button id="composerSend" class="sm-composer__send" type="submit" aria-label="Enviar">Enviar</button>
+          </form>
+
+          <button class="action-btn" id="btnContactShop" type="button">Contatar a mecânica</button>
+        </div>
+      </article>
+
+      <!-- Mapa (aparece após "Contatar a mecânica") -->
+      <aside class="map-card">
+        <div id="map" aria-label="Mapa de oficinas"></div>
+      </aside>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>&copy; 2025 SoftMarea. Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- JS desta página -->
+  <script src="../JavaScript/ChatBot.js"></script>
+</body>
+</html>

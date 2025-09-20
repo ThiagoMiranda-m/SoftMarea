@@ -1,460 +1,346 @@
 "use strict";
 
-document.addEventListener('DOMContentLoaded', () => {
-  
-  /* Helpers */
-  const $  = (s, el=document) => el.querySelector(s);
-  const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+/* Helpers */
+const $  = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-  /* ========= Toast / Notificação ========= */
-  const toast = $('#toast');
-  const toastText = $('#toastText');
-  let toastTimer = null;
+/* ========= Toast / Notificação ========= */
+let toast = document.getElementById('toast');
+let toastText = document.getElementById('toastText');
+let toastTimer = null;
 
-  function showToast(message, type = 'success', ms = 2600){
-    if (!toast || !toastText) return;
-    toast.classList.remove('toast--success','toast--error','is-open');
-    toastText.textContent = message;
-    toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
-    requestAnimationFrame(()=> toast.classList.add('is-open'));
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> toast.classList.remove('is-open'), ms);
+function ensureToast(){
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.className = 'toast';
+    toastText = document.createElement('span');
+    toastText.id = 'toastText';
+    toast.appendChild(toastText);
+    document.body.appendChild(toast);
   }
-  window.showToast = showToast;
-
-  /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
-  const API_URL = "http://localhost:3000/auth";
-  const firebaseConfig = {
-    apiKey: "AIzaSyCD7RMisuimpkztH2N-eFMSB4XuuLSPaNs",
-    authDomain: "softmarea-7eba0.firebaseapp.com",
-    projectId: "softmarea-7eba0",
-    storageBucket: "softmarea-7eba0.appspot.com",
-    messagingSenderId: "44251087941",
-    appId: "1:44251087941:web:d5444c12c8f251731ecf2c"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
-  /* =================== DADOS: MODELOS / ANOS =================== */
-  const CAR_DATA = {
-    Ford:        ["Ka", "Fiesta", "Focus", "Fusion", "EcoSport", "Ranger", "Territory", "Maverick"],
-    Chevrolet:   ["Onix", "Onix Plus", "Prisma", "Cruze", "Tracker", "S10", "Montana", "Spin"],
-    Toyota:      ["Etios", "Yaris", "Corolla", "Corolla Cross", "Hilux", "SW4", "RAV4"],
-    Honda:       ["Fit", "City", "Civic", "HR-V", "WR-V", "CR-V"],
-    Volkswagen:  ["Gol", "Polo", "Virtus", "T-Cross", "Nivus", "Saveiro", "Jetta"],
-    Fiat:        ["Mobi", "Argo", "Cronos", "Pulse", "Fastback", "Toro", "Strada"]
-  };
-  function generateYears(from = 1995, to = (new Date()).getFullYear()){
-    const list = [];
-    for (let y = to; y >= from; y--) list.push(String(y));
-    return list;
+  if (!toastText) {
+    toastText = document.createElement('span');
+    toastText.id = 'toastText';
+    toast.appendChild(toastText);
   }
-  const YEARS = generateYears(1995);
+}
+function showToast(message, type = 'success', ms = 2600){
+  ensureToast();
+  toast.classList.remove('toast--success','toast--error','is-open');
+  toastText.textContent = message;
+  toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
+  requestAnimationFrame(()=> toast.classList.add('is-open'));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toast.classList.remove('is-open'), ms);
+}
+window.showToast = showToast;
 
-  /* ================= PANORAMA + LOGOS ================= */
-  const panorama = $('#panorama');
+/* ================= CONFIGURAÇÃO DA API ================= */
+const API_URL = "http://localhost:3000/auth"; // API somente para login/registro
 
-  function fillBrand(panel){
-    const brand = panel?.dataset?.brand || '';
-    const el = $('.brand-input', panel);
-    if(!el || !brand) return;
-    el.value = brand;
-    el.classList.add('filled');
+/* =================== DADOS: MODELOS / ANOS =================== */
+const CAR_DATA = {
+  Ford:        ["Ka","Fiesta","Focus","Fusion","EcoSport","Ranger","Territory","Maverick"],
+  Chevrolet:   ["Onix","Onix Plus","Prisma","Cruze","Tracker","S10","Montana","Spin"],
+  Toyota:      ["Etios","Yaris","Corolla","Corolla Cross","Hilux","SW4","RAV4"],
+  Honda:       ["Fit","City","Civic","HR-V","WR-V","CR-V"],
+  Volkswagen:  ["Gol","Polo","Virtus","T-Cross","Nivus","Saveiro","Jetta"],
+  Fiat:        ["Mobi","Argo","Cronos","Pulse","Fastback","Toro","Strada"]
+};
+function generateYears(from=1995, to=(new Date()).getFullYear()){
+  const r=[]; for(let y=to;y>=from;y--) r.push(String(y)); return r;
+}
+const YEARS = generateYears(1995);
+
+/* ================= PANORAMA + LOGOS ================= */
+const panorama = $('#panorama');
+
+function pauseAllVideos(root=document){
+  $$('.panel__media video', root).forEach(v=>{ try{ v.pause(); }catch{} });
+}
+function playAutoplayVideo(panel){
+  const v = $('.panel__media video[autoplay]', panel);
+  if (!v) return; try{ v.muted = true; v.play().catch(()=>{}); }catch{}
+}
+function fillBrand(panel){
+  const brand =
+    panel?.dataset?.brand ||
+    $('.logo-btn', panel)?.getAttribute('aria-label') ||
+    $('.logo-btn img', panel)?.alt || '';
+  const el = $('.brand-input', panel);
+  if(!el || !brand) return;
+  el.value = brand; // readonly no HTML
+  el.classList.add('filled');
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  el.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function populateSelectors(panel){
+  if (!panel) return;
+  const brand   = panel?.dataset?.brand || '';
+  const modelEl = $('.model-select', panel);
+  const yearEl  = $('.year-select', panel);
+
+  if (modelEl){
+    modelEl.innerHTML = '';
+    const ph = new Option('Modelo',''); ph.disabled = true; ph.selected = true;
+    modelEl.appendChild(ph);
+    (CAR_DATA[brand] || []).forEach(m => modelEl.appendChild(new Option(m, m)));
   }
-  function populateSelectors(panel){
-    if (!panel) return;
-    const brand = panel?.dataset?.brand || '';
-    const modelSel = $('.model-select', panel);
-    const yearSel  = $('.year-select', panel);
-
-    if (modelSel){
-      modelSel.innerHTML = '<option value="" disabled selected>Modelo</option>';
-      (CAR_DATA[brand] || []).forEach(m=>{
-        const op = document.createElement('option');
-        op.value = m; op.textContent = m;
-        modelSel.appendChild(op);
-      });
-    }
-    if (yearSel){
-      yearSel.innerHTML = '<option value="" disabled selected>Ano</option>';
-      YEARS.forEach(y=>{
-        const op = document.createElement('option');
-        op.value = y; op.textContent = y;
-        yearSel.appendChild(op);
-      });
-    }
+  if (yearEl){
+    yearEl.innerHTML = '';
+    const ph = new Option('Ano',''); ph.disabled = true; ph.selected = true;
+    yearEl.appendChild(ph);
+    YEARS.forEach(y => yearEl.appendChild(new Option(y, y)));
   }
-  function pauseAllVideos(root=document){
-    $$('.panel__media video', root).forEach(v => { try{ v.pause(); }catch{} });
+}
+function activatePanel(panel){
+  if(!panel) return;
+  $$('.panel.active', panorama).forEach(p=>p.classList.remove('active'));
+  panel.classList.add('active');
+  pauseAllVideos(panorama);
+  playAutoplayVideo(panel);
+  fillBrand(panel);
+  populateSelectors(panel);
+  try{ panel.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});}catch{}
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const active = $('.panel.active');
+  if (active){ fillBrand(active); populateSelectors(active); playAutoplayVideo(active); }
+});
+
+/* ===== Redirecionamento seguro para o Chat ===== */
+const CHAT_PAGE_PATH = './ChatBot.html'; // ajuste se o arquivo/pasta for diferente
+
+function buildChatURL(brand, model, year){
+  const url = new URL(CHAT_PAGE_PATH, window.location.href); // relativo à Home
+  url.search = new URLSearchParams({ brand, model, year }).toString();
+  return url.toString();
+}
+function handleDiagnosticar(panel){
+  const brand = panel?.dataset?.brand || $('.brand-input', panel)?.value?.trim();
+  const model = $('.model-select', panel)?.value || '';
+  const year  = $('.year-select',  panel)?.value || '';
+  if (!model || !year){
+    showToast('Escolha o modelo e o ano.', 'error');
+    return;
   }
-  function playAutoplayVideo(panel){
-    const v = $('.panel__media video[autoplay]', panel);
-    if (!v) return;
-    try { v.muted = true; v.play().catch(()=>{}); } catch {}
+  window.location.assign(buildChatURL(brand, model, year));
+}
+
+/* Um único listener para logos e para o botão "Diagnosticar problema" */
+panorama?.addEventListener('click', (ev)=>{
+  const cta = ev.target.closest('button.cta');
+  if (cta && panorama.contains(cta)){
+    handleDiagnosticar(cta.closest('.panel'));
+    return;
   }
-  function activatePanel(panel){
-    if(!panel) return;
-    $$('.panel.active', panorama).forEach(p=>p.classList.remove('active'));
-    panel.classList.add('active');
-    pauseAllVideos(panorama);
-    playAutoplayVideo(panel);
-    fillBrand(panel);
-    populateSelectors(panel);
-    try{ panel.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});}catch{}
-  }
-  panorama?.addEventListener('click', (ev)=>{
-    const btn = ev.target.closest('.logo-btn'); if(!btn) return;
-    activatePanel(btn.closest('.panel'));
-  });
+  const logo = ev.target.closest('.logo-btn');
+  if (logo){ activatePanel(logo.closest('.panel')); }
+});
 
-  /* ================= MODAIS ================= */
-  const loginModal          = $('#loginModal');
-  const registerModal       = $('#registerModal');
-  const verifyCodeModal     = $('#verifyCodeModal');
-  const forgotPasswordModal = $('#forgotPasswordModal');
-  const phoneAuthModal      = $('#phoneAuthModal');
+/* ================= MODAIS: LOGIN, REGISTRO, VERIFICAÇÃO, ESQUECI ================= */
+const loginModal          = $('#loginModal');
+const registerModal       = $('#registerModal');
+const verifyCodeModal     = $('#verifyCodeModal');
+const forgotPasswordModal = $('#forgotPasswordModal');
 
-  const btnOpenLogin        = $('#btnLogin');
-  const btnOpenRegister     = $('#btnRegistro');
-  const btnForgotPassword   = $('#btnForgotPassword');
-  const btnsOpenPhoneLogin  = $$('.js-open-phone-login');
+const btnOpenLogin        = $('#btnLogin');
+const btnOpenRegister     = $('#btnRegistro');
+const btnForgotPassword   = $('#btnForgotPassword');
 
-  let userEmailForVerification = '';
+let userEmailForVerification = '';
 
-  function openModal(modal) {
-    if(!modal) return;
-    modal.setAttribute('aria-hidden', 'false');
-    modal.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeModal(modal) {
-    if(!modal) return;
-    modal.setAttribute('aria-hidden', 'true');
-    modal.classList.remove('is-open');
-    document.body.style.overflow = '';
-  }
+function openModal(modal){ if(!modal) return; modal.classList.add('is-open'); document.body.style.overflow='hidden'; }
+function closeModal(modal){ if(!modal) return; modal.classList.remove('is-open'); document.body.style.overflow=''; }
 
-  window.closeAllAuthModals = function(){
-    closeModal(loginModal);
-    closeModal(registerModal);
-    closeModal(verifyCodeModal);
-    closeModal(forgotPasswordModal);
-    closeModal(phoneAuthModal);
-  };
+btnOpenLogin   ?.addEventListener('click', ()=> openModal(loginModal));
+btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
+btnForgotPassword?.addEventListener('click', e=>{ e.preventDefault(); closeModal(loginModal); openModal(forgotPasswordModal); });
 
-  btnOpenLogin?.addEventListener('click', ()=> openModal(loginModal));
-  btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
-  btnForgotPassword?.addEventListener('click', e => {
-    e.preventDefault();
-    closeModal(loginModal);
-    openModal(forgotPasswordModal);
-  });
-  btnsOpenPhoneLogin.forEach(btn => {
-    btn.addEventListener('click', () => {
-      closeAllAuthModals();
-      openModal(phoneAuthModal);
-      formSendCode.classList.remove('is-hidden');
-      formVerifyCode.classList.add('is-hidden');
-      setupRecaptcha();
-    });
-  });
+[loginModal, registerModal, verifyCodeModal, forgotPasswordModal].forEach(modal=>{
+  modal?.addEventListener('click', (e)=>{ if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal); });
+});
+document.addEventListener('keydown', (e)=>{
+  if (e.key !== 'Escape') return;
+  if (loginModal?.classList.contains('is-open'))          closeModal(loginModal);
+  if (registerModal?.classList.contains('is-open'))       closeModal(registerModal);
+  if (verifyCodeModal?.classList.contains('is-open'))     closeModal(verifyCodeModal);
+  if (forgotPasswordModal?.classList.contains('is-open')) closeModal(forgotPasswordModal);
+});
 
-  [loginModal, registerModal, verifyCodeModal, forgotPasswordModal, phoneAuthModal].forEach(modal=>{
-    modal?.addEventListener('click', (e)=>{
-      if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal);
-    });
-  });
-  document.addEventListener('keydown', (e)=>{
-    if (e.key !== 'Escape') return;
-    const openModal = $('.modal.is-open');
-    if (openModal) closeModal(openModal);
-  });
+/* ================= HEADER: estado logado/deslogado ================= */
+const btnMenu       = $('#btnMenu');
+const userMenu      = $('#userMenu');
+const menuHistorico = $('#menuHistorico');
+const menuSair      = $('#menuSair');
+const btnLoginHdr   = $('#btnLogin');
+const btnRegistro   = $('#btnRegistro');
 
-  /* ================= HEADER: estado logado/deslogado ================= */
-  const btnMenu       = $('#btnMenu');
-  const userMenu      = $('#userMenu');
-  const menuSair      = $('#menuSair');
-  const btnLoginHdr   = $('#btnLogin');
-  const btnRegistro   = $('#btnRegistro');
-
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-  function isLoggedIn(){
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlToken = urlParams.get('token');
-    if (urlToken) {
-      localStorage.setItem('sm_token', urlToken);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    const cookieToken = getCookie('sm_token');
-    if (cookieToken) {
-      localStorage.setItem('sm_token', cookieToken);
-      document.cookie = 'sm_token=; Max-Age=-99999999; path=/;';
-    }
-    return !!localStorage.getItem('sm_token');
-  }
-
-  function setLoggedIn(v, origin = 'login') {
-    if (!v) {
-      localStorage.removeItem('sm_token');
-      updateAuthUI(false);
-      return;
-    }
-    updateAuthUI(true);
-    window.closeAllAuthModals?.();
-    const msg = origin === 'register' ? 'Registado com sucesso' : 'Conectado com sucesso';
-    window.showToast?.(msg, 'success');
-  }
-  window.setLoggedIn = setLoggedIn;
-
-  function updateAuthUI(logged) {
-    btnRegistro?.classList.toggle('is-hidden', logged);
-    btnLoginHdr?.classList.toggle('is-hidden', logged);
-    btnMenu?.classList.toggle('is-hidden', !logged);
-    if (!logged) {
-      userMenu?.classList.remove('is-open');
-      btnMenu?.setAttribute('aria-expanded','false');
-    }
-  }
-
-  btnMenu?.addEventListener('click', (e)=>{
-    const open = userMenu.classList.toggle('is-open');
-    btnMenu.setAttribute('aria-expanded', String(open));
-    e.stopPropagation();
-  });
-  document.addEventListener('click', (e)=>{
-    if (!userMenu?.classList.contains('is-open')) return;
-    const inside = e.target.closest('#userMenu, #btnMenu');
-    if (!inside){
-      userMenu.classList.remove('is-open');
-      btnMenu?.setAttribute('aria-expanded','false');
-    }
-  });
-  menuSair?.addEventListener('click', ()=>{
+function isLoggedIn(){ return !!localStorage.getItem('sm_token'); }
+function setLoggedIn(v, origin='login'){
+  if (!v){
+    localStorage.removeItem('sm_token');
+    updateAuthUI(false);
     userMenu?.classList.remove('is-open');
-    setLoggedIn(false);
-  });
+    btnMenu ?.setAttribute('aria-expanded','false');
+    return;
+  }
+  updateAuthUI(true);
+  window.closeAllAuthModals?.();
+  const msg = origin === 'register' ? 'Registrado com sucesso' : 'Conectado com sucesso';
+  showToast(msg, 'success');
+}
+window.setLoggedIn = setLoggedIn;
 
-  /* ================= FORM: LOGIN ================= */
-  $('#form-login')?.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const form = e.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
+function updateAuthUI(logged){
+  btnRegistro?.classList.toggle('is-hidden', logged);
+  btnLoginHdr?.classList.toggle('is-hidden', logged);
+  btnMenu?.classList.toggle('is-hidden', !logged);
+  if (!logged){
+    userMenu?.classList.remove('is-open');
+    btnMenu?.setAttribute('aria-expanded','false');
+  }
+}
+document.addEventListener('DOMContentLoaded', ()=> updateAuthUI(isLoggedIn()));
 
-    const formData = new FormData(form);
-    const body = { email: formData.get('email'), password: formData.get('password') };
+btnMenu?.addEventListener('click', (e)=>{
+  const open = userMenu.classList.toggle('is-open');
+  btnMenu.setAttribute('aria-expanded', String(open));
+  e.stopPropagation();
+});
+document.addEventListener('click', (e)=>{
+  if (!userMenu?.classList.contains('is-open')) return;
+  if (!e.target.closest('#userMenu, #btnMenu')){
+    userMenu.classList.remove('is-open');
+    btnMenu?.setAttribute('aria-expanded','false');
+  }
+});
+document.addEventListener('keydown', (e)=>{
+  if (e.key === 'Escape'){
+    userMenu?.classList.remove('is-open');
+    btnMenu?.setAttribute('aria-expanded','false');
+  }
+});
+menuHistorico?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); console.log('Abrir histórico'); });
+menuSair?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); setLoggedIn(false); });
 
-    try {
-      const res = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro no login');
+window.closeAllAuthModals = function(){
+  closeModal(loginModal);
+  closeModal(registerModal);
+  closeModal(verifyCodeModal);
+  closeModal(forgotPasswordModal);
+};
 
-      localStorage.setItem('sm_token', data.token);
-      setLoggedIn(true, 'login');
-    } catch(err){
-      showToast(err.message || 'Erro no login', 'error');
-    } finally {
-      if (submitButton) submitButton.disabled = false;
-    }
-  });
+/* ================= FORM: LOGIN ================= */
+$('#form-login')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
 
-  /* ================= FORM: REGISTRO ================= */
-  $('#form-register')?.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const form = e.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
+  const formData = new FormData(form);
+  const body = { email: formData.get('email'), password: formData.get('password') };
 
-    const formData = new FormData(form);
-    userEmailForVerification = formData.get('email');
-    const body = {
-      name: formData.get('name'),
-      email: userEmailForVerification,
-      password: formData.get('password')
-    };
-
-    try {
-      const res = await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro no registo');
-
-      closeModal(registerModal);
-      openModal(verifyCodeModal);
-      showToast(data.message || 'Código enviado para o e-mail', 'success');
-    } catch(err){
-      showToast(err.message || 'Erro no registo', 'error');
-    } finally {
-      if (submitButton) submitButton.disabled = false;
-    }
-  });
-
-  /* ================= FORM: VERIFICAR CÓDIGO ================= */
-  $('#form-verify-code')?.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const form = e.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
-
-    const formData = new FormData(form);
-    const body = { email: userEmailForVerification, code: formData.get('code') };
-
-    try {
-      const res = await fetch(`${API_URL}/verify-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro na verificação');
-
-      localStorage.setItem('sm_token', data.token);
-      setLoggedIn(true, 'register');
-    } catch(err){
-      showToast(err.message || 'Erro na verificação', 'error');
-    } finally {
-      if (submitButton) submitButton.disabled = false;
-    }
-  });
-
-  /* ================= FORM: ESQUECI A SENHA ================= */
-  $('#form-forgot-password')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const form = e.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
-
-    const formData = new FormData(form);
-    const body = { email: formData.get('email') };
-
-    try {
-      const res = await fetch(`${API_URL}/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao enviar o e-mail');
-
-      closeModal(forgotPasswordModal);
-      showToast(data.message || 'E-mail enviado com sucesso', 'success', 4000);
-    } catch (err) {
-      showToast(err.message || 'Erro ao enviar o e-mail', 'error');
-    } finally {
-      if (submitButton) submitButton.disabled = false;
-    }
-  });
-
-  /* ================= FORM: LOGIN COM TELEFONE (COM LOGS DE DEPURAÇÃO) ================= */
-/* ================= FORM: LOGIN COM TELEFONE (TESTE COM EVENTO DE CLIQUE) ================= */
-  const formSendCode = $('#form-phone-send-code');
-  const formVerifyCode = $('#form-phone-verify-code');
-  const btnSendPhoneCode = $('#btn-send-phone-code');
-
-  console.log('Verificando elementos para o teste de clique...');
-  console.log('Formulário encontrado:', formSendCode);
-  console.log('Botão encontrado:', btnSendPhoneCode);
-
-  if (btnSendPhoneCode) {
-    btnSendPhoneCode.addEventListener('click', e => {
-      // Previne o comportamento padrão do botão, que é submeter o formulário
-      e.preventDefault(); 
-      
-      console.log('✅ O CLIQUE NO BOTÃO FOI DETECTADO!');
-
-      const phoneNumber = new FormData(formSendCode).get('phone');
-      const appVerifier = window.recaptchaVerifier;
-
-      console.log('Número de telefone:', phoneNumber);
-
-      if (!appVerifier) {
-        console.error('O appVerifier (reCAPTCHA) não existe. Tentando configurar novamente...');
-        setupRecaptcha(); // Tenta reconfigurar caso não exista
-        showToast('Ocorreu um erro, tente novamente.', 'error');
-        return;
-      }
-
-      auth.signInWithPhoneNumber(phoneNumber, appVerifier)
-        .then(confirmationResult => {
-          console.log('SUCESSO: A Promise foi resolvida!', confirmationResult);
-          window.confirmationResult = confirmationResult;
-          
-          formSendCode.classList.add('is-hidden');
-          formVerifyCode.classList.remove('is-hidden');
-          showToast('Código SMS enviado!', 'success');
-        })
-        .catch(err => {
-          console.error('FALHA: A Promise foi rejeitada!', err);
-          showToast(`Erro: ${err.message}`, 'error');
-        });
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
-  } else {
-    console.error('Não foi possível anexar o event listener porque o botão btnSendPhoneCode não foi encontrado.');
-  }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro no login');
 
-  function setupRecaptcha() {
-    console.log('Tentando configurar o reCAPTCHA...');
-    if (!btnSendPhoneCode) return;
-    
-    // Evita recriar o verificador se ele já existir e estiver visível
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('btn-send-phone-code', {
-        'size': 'invisible',
-        'callback': (response) => {
-          console.log('reCAPTCHA resolvido!');
-        }
-      });
-      window.recaptchaVerifier.render();
-    }
-  }
+    localStorage.setItem('sm_token', data.token);
+    setLoggedIn(true, 'login');
+    closeModal(loginModal);
+  } catch(err){ showToast(err.message || 'Erro no login', 'error'); }
+  finally { submitButton.disabled = false; }
+});
 
-  // ... (o código de 'formVerifyCode' continua o mesmo) ...
-  formVerifyCode?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const code = new FormData(formVerifyCode).get('code');
-    
-    if (!window.confirmationResult) {
-      showToast('Erro: A confirmação expirou. Tente novamente.', 'error');
-      return;
-    }
+/* ================= FORM: REGISTRO ================= */
+$('#form-register')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
 
-    try {
-      const result = await window.confirmationResult.confirm(code);
-      const firebaseUser = result.user;
-      const firebaseToken = await firebaseUser.getIdToken();
-      
-      const res = await fetch(`${API_URL}/phone-signin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseToken })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+  const fd = new FormData(form);
+  const body = { name: fd.get('name'), email: fd.get('email'), password: fd.get('password') };
+  window.userEmailForVerification = fd.get('email');
 
-      localStorage.setItem('sm_token', data.token);
-      setLoggedIn(true, 'login');
-    } catch (err) {
-      showToast(`Erro: ${err.message}`, 'error');
-    }
-  });
+  try {
+    const res = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro no registro');
 
-  /* ===== Validação de senha em tempo real ===== */
-  const registerPasswordInput = document.getElementById('registerPassword');
-  const passwordReqsContainer = document.getElementById('password-reqs');
+    closeModal(registerModal);
+    openModal(verifyCodeModal);
+    showToast(data.message || 'Código enviado para o e-mail', 'success');
+  } catch(err){ showToast(err.message || 'Erro no registro', 'error'); }
+  finally { submitButton.disabled = false; }
+});
 
-  if (registerPasswordInput && passwordReqsContainer) {
-         const reqs = {
+/* ================= FORM: VERIFICAR CÓDIGO ================= */
+$('#form-verify-code')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const fd = new FormData(form);
+  const body = { email: window.userEmailForVerification, code: fd.get('code') };
+
+  try {
+    const res = await fetch(`${API_URL}/verify-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro na verificação');
+
+    localStorage.setItem('sm_token', data.token);
+    setLoggedIn(true, 'register');
+    closeModal(verifyCodeModal);
+  } catch(err){ showToast(err.message || 'Erro na verificação', 'error'); }
+  finally { submitButton.disabled = false; }
+});
+
+/* ================= FORM: ESQUECI A SENHA ================= */
+$('#form-forgot-password')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const fd = new FormData(form);
+  const body = { email: fd.get('email') };
+
+  try {
+    const res = await fetch(`${API_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao enviar o e-mail');
+
+    closeModal(forgotPasswordModal);
+    showToast(data.message || 'E-mail enviado com sucesso', 'success', 4000);
+  } catch (err) { showToast(err.message || 'Erro ao enviar o e-mail', 'error'); }
+  finally { submitButton.disabled = false; }
+});
+
+/* ===== (Opcional) Validação live da senha — só funciona se os IDs existirem ===== */
+const registerPasswordInput = $('#registerPassword');
+const passwordReqsContainer = $('#password-reqs');
+if (registerPasswordInput && passwordReqsContainer) {
+  const reqs = {
     length: $('[data-req="length"]', passwordReqsContainer),
     case:   $('[data-req="case"]',   passwordReqsContainer),
     number: $('[data-req="number"]', passwordReqsContainer),
@@ -465,18 +351,4 @@ document.addEventListener('DOMContentLoaded', () => {
     reqs.case  ?.classList.toggle('is-valid', /[A-Z]/.test(pass));
     reqs.number?.classList.toggle('is-valid', /[0-9]/.test(pass));
   });
-  }
-
-  // =================== INICIALIZAÇÃO FINAL ===================
-  const activePanel = $('.panel.active');
-  if (activePanel){
-    fillBrand(activePanel);
-    populateSelectors(activePanel);
-    playAutoplayVideo(activePanel);
-  }
-  if (isLoggedIn()) {
-    setLoggedIn(true, 'login');
-  } else {
-    updateAuthUI(false);
-  }
-});
+}
