@@ -5,6 +5,7 @@ const pool = require('./db');
 const {sendVerificationCode, sendPasswordResetEmail } = require('./email');
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountKey.json');
+const { GoogleGenerativeAI } = require('@google/generative-ai'); // <-- Pacote da IA
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -246,5 +247,64 @@ exports.phoneSignIn = async (req, res) => {
     // IMPORTANTE: Veja o erro no console do servidor!
     console.error("Erro detalhado em phoneSignIn:", err);
     return res.status(500).json({ error: 'Erro na autenticação com telefone.' });
+  }
+};
+
+// ================= CHATBOT COM IA (GEMINI) =================
+exports.handleChat = async (req, res) => {
+  try {
+    const { message, history, vehicleInfo } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'A mensagem é obrigatória.' });
+    }
+
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // 1. Instrução de concisão adicionada ao prompt
+    const systemPrompt = `
+      Você é um assistente automotivo especialista chamado SoftMarea.
+      O usuário tem um ${vehicleInfo.brand || ''} ${vehicleInfo.model || ''} ano ${vehicleInfo.year || ''}. Baseie seu diagnóstico neste veículo.
+      Seu objetivo é ajudar o usuário a diagnosticar problemas.
+      Faça perguntas claras e diretas.
+      **MUITO IMPORTANTE: Mantenha suas respostas curtas e objetivas, com no máximo 100 palavras.**
+      Sempre conclua recomendando a consulta a um mecânico profissional para confirmação.
+      Responda em português do Brasil.
+    `;
+    
+    const chatHistory = (history || []).map(item => ({
+      role: item.role === 'user' ? 'user' : 'model',
+      parts: [{ text: item.content }],
+    }));
+
+    const chat = model.startChat({
+      history: chatHistory,
+      generationConfig: {
+        temperature: 0.8, // Um pouco menos "criativo" para ser mais direto
+        topK: 1,
+        topP: 1,
+        // 2. Limite técnico no tamanho da resposta (um token é ~4 caracteres)
+        // 256 tokens é um bom limite para garantir que não passe de ~100-120 palavras.
+        maxOutputTokens: 256, 
+      },
+      systemInstruction: {
+        role: "model",
+        parts: [{ text: systemPrompt }],
+      },
+    });
+    // --- FIM DA ALTERAÇÃO ---
+
+    const result = await chat.sendMessage(message);
+    const response = result.response;
+    const replyText = response.text();
+
+    res.json({ reply: replyText });
+
+  } catch (err) {
+    console.error("Erro na API do Chatbot:", err);
+    res.status(500).json({ error: 'Ocorreu um erro ao comunicar com a IA.' });
   }
 };
