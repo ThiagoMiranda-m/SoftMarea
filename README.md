@@ -19,10 +19,15 @@ A principal inovação do SoftMarea é sua **interface panorâmica**, onde cada 
 ### 🚘 Marcas e Modelos Suportados
 
 **Ford**: Ka, Fiesta, Focus, Fusion, EcoSport, Ranger, Territory, Maverick
+
 **Chevrolet**: Onix, Onix Plus, Prisma, Cruze, Tracker, S10, Montana, Spin
+
 **Toyota**: Etios, Yaris, Corolla, Corolla Cross, Hilux, SW4, RAV4
+
 **Honda**: Fit, City, Civic, HR-V, WR-V, CR-V
+
 **Volkswagen**: Gol, Polo, Virtus, T-Cross, Nivus, Saveiro, Jetta
+
 **Fiat**: Mobi, Argo, Cronos, Pulse, Fastback, Toro, Strada
 
 Suporte completo para veículos de **1995 até 2025**, abrangendo praticamente todo o mercado automotivo brasileiro.
