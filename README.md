@@ -30,7 +30,6 @@ A principal inovação do SoftMarea é sua **interface panorâmica**, onde cada 
 
 **Fiat**: Mobi, Argo, Cronos, Pulse, Fastback, Toro, Strada
 
-Suporte completo para veículos de **1995 até 2025**, abrangendo praticamente todo o mercado automotivo brasileiro.
 
 ## 🛠️ Tecnologias Utilizadas
 
