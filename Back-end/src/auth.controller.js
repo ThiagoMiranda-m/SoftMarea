@@ -261,16 +261,18 @@ exports.handleChat = async (req, res) => {
 
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // --- INÍCIO DA CORREÇÃO ---
+    // Alterado para o modelo 'gemini-pro', que é mais estável e globalmente disponível.
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // --- FIM DA CORREÇÃO ---
 
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // 1. Instrução de concisão adicionada ao prompt
     const systemPrompt = `
       Você é um assistente automotivo especialista chamado SoftMarea.
       O usuário tem um ${vehicleInfo.brand || ''} ${vehicleInfo.model || ''} ano ${vehicleInfo.year || ''}. Baseie seu diagnóstico neste veículo.
       Seu objetivo é ajudar o usuário a diagnosticar problemas.
       Faça perguntas claras e diretas.
-      **MUITO IMPORTANTE: Mantenha suas respostas curtas e objetivas, com no máximo 100 palavras.**
+      MUITO IMPORTANTE: Mantenha suas respostas curtas e objetivas, com no máximo 100 palavras.
       Sempre conclua recomendando a consulta a um mecânico profissional para confirmação.
       Responda em português do Brasil.
     `;
@@ -283,11 +285,9 @@ exports.handleChat = async (req, res) => {
     const chat = model.startChat({
       history: chatHistory,
       generationConfig: {
-        temperature: 0.8, // Um pouco menos "criativo" para ser mais direto
+        temperature: 0.8,
         topK: 1,
         topP: 1,
-        // 2. Limite técnico no tamanho da resposta (um token é ~4 caracteres)
-        // 256 tokens é um bom limite para garantir que não passe de ~100-120 palavras.
         maxOutputTokens: 256, 
       },
       systemInstruction: {
@@ -295,7 +295,6 @@ exports.handleChat = async (req, res) => {
         parts: [{ text: systemPrompt }],
       },
     });
-    // --- FIM DA ALTERAÇÃO ---
 
     const result = await chat.sendMessage(message);
     const response = result.response;
