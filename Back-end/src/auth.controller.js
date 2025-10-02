@@ -264,7 +264,7 @@ exports.handleChat = async (req, res) => {
     
     // --- INÍCIO DA CORREÇÃO ---
     // Alterado para o modelo 'gemini-pro', que é mais estável e globalmente disponível.
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     // --- FIM DA CORREÇÃO ---
 
     const systemPrompt = `
