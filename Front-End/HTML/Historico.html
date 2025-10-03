@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SoftMarea • Histórico</title>
+
+  <!-- Reutiliza o header/footer e botões -->
+  <link rel="stylesheet" href="../Css/Home.css" />
+  <!-- Estilo específico da página -->
+  <link rel="stylesheet" href="../Css/Historico.css" />
+</head>
+<body>
+  <!-- Header idêntico às demais páginas -->
+  <header class="header">
+    <div class="header__brand">
+      <img class="img-logo" src="../Midias/Logo Site-Photoroom.png" alt="">
+    </div>
+    <nav class="header__actions">
+      <button class="btn" id="btnRegistro">Registro</button>
+      <button class="btn" id="btnLogin">Login</button>
+
+      <button class="hamburger is-hidden" id="btnMenu" aria-label="Menu" aria-haspopup="true" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="menu-popover" id="userMenu" role="menu" aria-label="Menu do usuário">
+        <button class="menu-item" id="menuHistorico" role="menuitem">Histórico</button>
+        <button class="menu-item" id="menuSair" role="menuitem">Sair</button>
+      </div>
+    </nav>
+  </header>
+  
+
+
+  <!-- Conteúdo -->
+  <main class="hist">
+    <div class="back-wrap">
+    <a class="back-btn" href="../HTML/Home.html">Voltar à seleção do veículo</a>
+    </div>
+    <div class="hist__head">
+      <h1 class="hist__title">Histórico de Diagnósticos</h1>
+      <p class="hist__sub">Veja os diagnósticos recentes feitos pela IA nos seus veículos.</p>
+
+      <div class="hist__controls">
+        <!-- (opcional) busca foi removida do layout, mas os filtros continuam -->
+        <div class="hist__filters">
+          <select id="brandFilter">
+            <option value="">Todas as marcas</option>
+            <option>Ford</option><option>Chevrolet</option><option>Toyota</option>
+            <option>Honda</option><option>Volkswagen</option><option>Fiat</option>
+          </select>
+          <select id="periodFilter">
+            <option value="30">Últimos 30 dias</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="90">Últimos 90 dias</option>
+            <option value="">Todo período</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de cards -->
+    <section id="histGrid" class="hist__grid" aria-live="polite"></section>
+
+    <!-- Estado vazio -->
+    <div id="emptyState" class="hist__empty is-hidden">
+      <img src="../Midias/Logo Site-Photoroom.png" alt="" />
+      <h3>Nenhum diagnóstico por aqui</h3>
+      <p>Quando você utilizar o Diagnóstico, seus resultados aparecerão nesta página.</p>
+      <a class="hist__cta" href="./Home.html">Fazer um diagnóstico</a>
+    </div>
+
+    <!-- Carregando / Paginação -->
+    <div id="loading" class="hist__loading is-hidden">Carregando…</div>
+    <button id="loadMore" class="hist__loadmore is-hidden">Carregar mais</button>
+  </main>
+
+  <!-- Modal de detalhes -->
+  <div class="modal" id="detailsModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="detailsTitle">Detalhes do diagnóstico</h2></header>
+      <section class="modal__content" id="detailsBody">
+        <!-- preenchido via JS -->
+      </section>
+    </div>
+  </div>
+
+  <!-- Toast (reutilizado) -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span id="toastText">Mensagem</span>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 SoftMarea. Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="../JavaScript/Historico.js" defer></script>
+</body>
+</html>

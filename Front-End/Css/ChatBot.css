@@ -1,10 +1,10 @@
-/* ===== CSS ORIGINAL ===== */
+/* ===== CSS COMPLETO DO CHATBOT ===== */
 
 /* Área da página */
 .chat-section{
   background:#cfeff4;
   padding: clamp(28px, 5vw, 48px) 16px 64px;
-  min-height: calc(100svh - 80px - 64px); /* header 80 + footer ~64 */
+  min-height: calc(100svh - 80px - 64px);
 }
 
 /* Layout principal: inicialmente 1 coluna (só chat) */
@@ -25,15 +25,16 @@
 
 /* Botão voltar */
 
-:root{
-  --header-h: 80px;     /* altura do seu header */
-  --back-offset: 56px;  /* distância extra abaixo do header */
+.chat-section .back-wrap{
+  position: sticky;        /* “gruda” no topo da section ao rolar */
+  top: 12px;               /* distância do topo da section */
+  z-index: 1500;           /* abaixo do popover (5000), acima do conteúdo */
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;     /* respiro abaixo do botão */
 }
-.back-fixed{
-  position: fixed;
-  top: calc(var(--header-h) + var(--back-offset));
-  right: 16px;
-  z-index: 3000;
+
+.back-btn{
   display: inline-block;
   padding: 14px 20px;
   border-radius: 18px;
@@ -42,12 +43,11 @@
   text-decoration: none;
   font-weight: 700;
   box-shadow: 0 10px 26px rgba(0,0,0,.2);
+  transition: filter .15s ease, transform .06s ease;
 }
-.back-fixed:hover{ filter: brightness(1.06); }
+.back-btn:hover{ filter: brightness(1.06); }
+.back-btn:active{ transform: translateY(1px); }
 
-
-
-/* Cartão do chat */
 .chat-card{
   background:#fff;
   border-radius:20px;
@@ -55,11 +55,7 @@
   padding: clamp(16px, 2.8vw, 22px);
   color:#0e2130;
 }
-.chat-title{
-  margin:0 0 10px;
-  font-size: clamp(18px, 2.2vw, 22px);
-  font-weight: 800;
-}
+.chat-title{ margin:0 0 10px; font-size: clamp(18px, 2.2vw, 22px); font-weight: 800; }
 .chat-sub{ margin:0 0 14px; opacity:.8; }
 
 .chat-scroll{
@@ -70,51 +66,8 @@
   padding:14px;
   background:#f8fbfd;
 }
-.msg{ margin:10px 0; max-width: 84%; }
-.msg.bot{
-  background:#e9f1ff; border-radius:14px; padding:10px 12px;
-}
-.msg.user{
-  background:#dff7e8; border-radius:14px; padding:10px 12px; margin-left:auto;
-}
 
-/* Ações */
-.chat-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
-.action-btn{
-  padding:10px 14px; border:0; border-radius:14px; cursor:pointer;
-  background:#173575; color:#fff; font-weight:700;
-}
-.action-btn--hollow{
-  background:#fff; color:#173575; border:2px solid #173575;
-}
-
-/* Mapa */
-.map-card{
-  display:none;
-  background:#fff; border-radius:20px; padding:10px;
-  box-shadow:0 18px 50px rgba(0,0,0,.15);
-  min-height: 420px;
-}
-.chat-layout.show-map .map-card{ display:block; }
-#map{ width:100%; height: min(60vh, 560px); border-radius:14px; }
-
-/* Responsivo */
-@media (max-width: 900px){
-  .chat-layout.show-map{ grid-template-columns: 1fr; }
-  .back-wrap{ position: static; margin-left:auto; margin-bottom:8px; }
-}
-@media (max-width: 480px){
-  .chat-actions{ flex-direction: column; }
-  .action-btn{ width:100%; text-align:center; }
-}
-@media (max-width: 900px){
-  :root{ --back-offset: 70px; } /* um tiquinho mais para baixo no mobile */
-  .chat-section{ padding-top: calc(28px + var(--back-offset)); }
-}
-
-
-/* ===== BLOCO NOVO: Chat interativo isolado (prefixo sm-) ===== */
-
+/* ===== Chat isolado (prefixo sm-) ===== */
 .sm-chat__scroll{
   height: min(52vh, 520px);
   overflow: auto;
@@ -123,36 +76,51 @@
   padding: 14px;
   background: #f8fbfd;
 }
-
-/* bolhas */
 .sm-msg{ margin:10px 0; max-width:84%; }
-.sm-msg.bot{
-  background:#e9f1ff;
-  border-radius:14px;
-  padding:10px 12px;
+.sm-msg.bot{ background:#e9f1ff; border-radius:14px; padding:10px 12px; }
+.sm-msg.user{ background:#dff7e8; border-radius:14px; padding:10px 12px; margin-left:auto; }
+
+/* ====== Botões SIM / NÃO (confirmação) ====== */
+.chat-actions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
-.sm-msg.user{
-  background:#dff7e8;
-  border-radius:14px;
-  padding:10px 12px;
-  margin-left:auto;
+.chat-actions .action-btn{
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  background: #173575;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+  transition: filter .15s ease, transform .06s ease;
+}
+.chat-actions .action-btn:hover{ filter: brightness(1.06); }
+.chat-actions .action-btn:active{ transform: translateY(1px); }
+.chat-actions .action-btn--hollow{
+  background: #fff;
+  color: #173575;
+  border: 2px solid #173575;
+  box-shadow: none;
 }
 
-/* composer + botão do mapa */
+/* ===== composer + ações inferiores ===== */
 .sm-chat__actions{
   display:flex;
+  flex-wrap:wrap;             /* permite quebrar linha */
   align-items:center;
   gap:12px;
-  flex-wrap:wrap;
   margin-top:14px;
 }
-
 .sm-composer{
+  order:1;                    /* vem primeiro */
   display:flex;
   gap:10px;
-  width:100%;
+  width:100%;                 /* ocupa a linha toda */
 }
-
 .sm-composer__input{
   flex:1;
   padding:12px 14px;
@@ -162,85 +130,72 @@
   outline:none;
   background:#fff;
 }
-.sm-composer__input:focus{
-  box-shadow:0 0 0 3px rgba(23,53,117,.15);
-}
-
+.sm-composer__input:focus{ box-shadow:0 0 0 3px rgba(23,53,117,.15); }
 .sm-composer__send{
-  padding:12px 18px;
-  border:0;
-  border-radius:14px;
-  font-weight:700;
-  cursor:pointer;
-  background:#173575;
-  color:#fff;
+  padding:12px 18px; border:0; border-radius:14px; font-weight:700; cursor:pointer; background:#173575; color:#fff;
 }
 .sm-composer__send:disabled{ opacity:.6; cursor:not-allowed; }
 
-/* digitando... */
+/* digitando */
 .sm-typing{
-  display:inline-flex;
-  gap:6px;
-  align-items:center;
-  background:#e9f1ff;
-  border-radius:14px;
-  padding:10px 12px;
-  width:fit-content;
+  display:inline-flex; gap:6px; align-items:center; background:#e9f1ff; border-radius:14px; padding:10px 12px; width:fit-content;
 }
-.sm-typing__dot{
-  width:6px; height:6px; border-radius:50%; background:#173575;
-  animation: sm-blink 1s infinite ease-in-out;
-}
+.sm-typing__dot{ width:6px; height:6px; border-radius:50%; background:#173575; animation: sm-blink 1s infinite ease-in-out; }
 .sm-typing__dot:nth-child(2){ animation-delay:.15s; }
 .sm-typing__dot:nth-child(3){ animation-delay:.3s; }
-@keyframes sm-blink{
-  0%, 80%, 100%{ opacity:.2; transform:translateY(0); }
-  40%{ opacity:1; transform:translateY(-3px); }
+@keyframes sm-blink{ 0%,80%,100%{opacity:.2;transform:translateY(0)} 40%{opacity:1;transform:translateY(-3px)} }
+
+/* ===== Botões inferiores ===== */
+
+/* "Contatar a mecânica" — mantém à esquerda na linha dos botões */
+#btnContactShop{
+  order:2;                 /* primeiro botão na segunda linha (esquerda) */
+  padding:12px 18px; border:0; border-radius:14px; font-weight:700; cursor:pointer;
+  background:#1266ac; color:#fff; box-shadow:0 10px 26px rgba(0,0,0,.15); transition:filter .15s ease, transform .06s ease;
+  min-width:220px;
 }
+#btnContactShop:hover{ filter:brightness(1.06); }
+#btnContactShop:active{ transform:translateY(1px); }
 
-@media (max-width: 600px){
-  .sm-composer__send{ padding:12px 14px; }
-  .sm-composer__input{ font-size:15px; }
-}
-
-
-/* ===== AJUSTES ISOLADOS: Botão + largura/posição do mapa ===== */
-
-/* Botão "Contatar a mecânica" reestilizado para combinar com o site */
-.sm-chat__actions #btnContactShop{
+/* "Diagnóstico Concluído" — mesmo estilo, à direita, abaixo do Enviar */
+.sm-finish{
+  display:none;             /* aparece só quando o composer estiver visível */
+  order:3;                  /* depois do contatar (vai à direita) */
+  margin-left:auto;         /* empurra para a direita */
   padding:12px 18px;
-  border:0;
-  border-radius:14px;
-  font-weight:700;
-  cursor:pointer;
-  background:#1266ac;          /* mesmo azul do botão Voltar */
-  color:#fff;
-  box-shadow:0 10px 26px rgba(0,0,0,.15);
-  transition:filter .15s ease, transform .06s ease;
+  border:0; border-radius:14px; font-weight:700; font-size:14px; cursor:pointer;
+  background:#1266ac; color:#fff; box-shadow:0 10px 26px rgba(0,0,0,.15);
+  transition: filter .15s ease, transform .06s ease, opacity .2s ease;
+  min-width:220px;
 }
-.sm-chat__actions #btnContactShop:hover{
-  filter:brightness(1.06);
-}
-.sm-chat__actions #btnContactShop:active{
-  transform:translateY(1px);
+.sm-finish:hover{ filter: brightness(1.06); }
+.sm-finish:active{ transform: translateY(1px); }
+.sm-finish:disabled{ opacity: .6; cursor: not-allowed; }
+
+/* Mostrar o botão novo quando o Enviar (composer) aparecer */
+.sm-composer:not(.is-hidden) + .sm-finish{
+  display: inline-flex;
 }
 
-
-@media (min-width: 1200px){
-  .chat-layout.show-map{
-    
-    grid-template-columns: minmax(360px, 560px) minmax(780px, 1fr);
-    max-width: 1400px; /* libera espaço total para o mapa crescer */
-  }
+/* ===== Mapa ===== */
+.map-card{
+  display:none;
+  background:#fff; border-radius:20px; padding:10px;
+  box-shadow:0 18px 50px rgba(0,0,0,.15);
+  min-height: 420px;
 }
+.chat-layout.show-map .map-card{ display:block; }
+#map{ width:100%; height: min(68vh, 660px); border-radius:14px; }
 
-@media (min-width: 901px){
-  .map-card{
-    margin-top: calc(var(--back-offset) + 18px); /* empurra mais para baixo */
-  }
+/* ===== Responsivo ===== */
+@media (max-width: 900px){
+  .chat-layout.show-map{ grid-template-columns: 1fr; }
+  :root{ --back-offset: 70px; }
+  .chat-section{ padding-top: calc(28px + var(--back-offset)); }
 }
-
-/* Altura um pouco maior do mapa */
-#map{
-  height: min(68vh, 660px);
+@media (max-width: 480px){
+  .action-btn{ width:auto; }
 }
+/* Garante que o popover do usuário fique acima do botão "Voltar" */
+.header{ position: relative; z-index: 3000; }
+.menu-popover{ z-index: 5000; }   /* acima do .back-fixed (1500) */

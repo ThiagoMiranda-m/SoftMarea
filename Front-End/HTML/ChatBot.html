@@ -26,15 +26,19 @@
     </nav>
   </header>
 
-  <a class="back-btn back-fixed" href="../HTML/Home.html">Voltar à seleção do veículo</a>
+
 
   <section class="chat-section">
+  <div class="back-wrap">
+    <a class="back-btn" href="../HTML/Home.html">Voltar à seleção do veículo</a>
+  </div>
     <div class="chat-layout" id="chatLayout">
       <article class="chat-card">
         <h2 class="chat-title" id="caseTitle">Diagnóstico</h2>
         <p class="chat-sub" id="caseSub">Descreva o problema que está acontecendo com o veículo.</p>
+
         <div class="sm-chat__scroll" id="chatBox" aria-live="polite"></div>
-        
+
         <div class="chat-actions" id="confirmationButtons"></div>
 
         <div class="sm-chat__actions">
@@ -42,6 +46,11 @@
             <input id="composerInput" class="sm-composer__input" type="text" placeholder="Digite sua mensagem…" required />
             <button id="composerSend" class="sm-composer__send" type="submit">Enviar</button>
           </form>
+
+          <!-- Botão novo (fica abaixo do Enviar) -->
+          <button class="sm-finish" id="btnFinish" type="button">Diagnóstico Concluído</button>
+
+          <!-- Mantém no lugar tradicional -->
           <button class="action-btn" id="btnContactShop" type="button">Contatar a mecânica</button>
         </div>
       </article>
@@ -51,6 +60,135 @@
       </aside>
     </div>
   </section>
+
+  <!-- ===== Modais (iguais aos da Home) ===== -->
+  <div class="modal" id="loginModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="loginTitle">Entrar</h2></header>
+      <section class="modal__content">
+        <form id="form-login" class="auth-form" autocomplete="on">
+          <label>Email
+            <input class="field field--light" type="email" name="email" required placeholder="seu@email.com">
+          </label>
+          <label>Senha
+            <input class="field field--light" type="password" name="password" required placeholder="••••••••">
+          </label>
+          <a href="#" id="btnForgotPassword" class="forgot-password-link">Esqueci a minha senha</a>
+          <button class="cta cta--block" type="submit">Entrar</button>
+        </form>
+
+        <div class="auth-providers" aria-label="Entrar com">
+          <a href="http://localhost:3000/auth/google" class="provider" data-provider="google" aria-label="Entrar com Google">
+            <svg viewBox="0 0 48 48" class="ico"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.7 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.3 29.6 4 24 4 16 4 9.1 8.6 6.3 14.7z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.3 29.6 4 24 4 16 4 9.1 8.6 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.2-2 13.9-5.3l-6.4-5.2C29.4 36.7 26.8 38 24 38c-5.4 0-9.9-3.3-11.5-8l-6.6 5.1C9 39.2 16 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 2.9-3.4 5.2-6.3 6.5l.1.1 6.4 5.2c-.5.5 8.5-4 8.5-15.8 0-1.2-.1-2.1-.4-3.5z"/></svg>
+            <span>Google</span>
+          </a>
+
+          <button class="provider js-open-phone-login" data-provider="phone" aria-label="Entrar com Telefone">
+            <svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.6.6 4 .6.6 0 1 .4 1 .9V20c0 1.1-.9 2-2 2C9.6 22 2 14.4 2 5c0-1.1.9-2 2-2h3.6c.5 0 .9.4.9 1 0 1.4.2 2.8.6 4 .1.4 0 .8-.3 1.1l-2.2 2.2z"/></svg>
+            <span>Telefone</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="registerModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="registerTitle">Criar conta</h2></header>
+      <section class="modal__content">
+        <form id="form-register" class="auth-form" autocomplete="on">
+          <label>Nome
+            <input class="field field--light" type="text" name="name" required placeholder="Seu nome">
+          </label>
+          <label>Email
+            <input class="field field--light" type="email" name="email" required placeholder="seu@email.com">
+          </label>
+          <label>Senha
+            <input id="registerPassword" class="field field--light" type="password" name="password" required placeholder="Crie uma senha">
+          </label>
+          <div id="password-reqs" class="password-reqs"></div>
+          <button class="cta cta--block" type="submit">Criar conta</button>
+        </form>
+
+        <div class="auth-providers" aria-label="Registar com">
+          <a href="http://localhost:3000/auth/google" class="provider" data-provider="google" aria-label="Registar com Google">
+            <svg viewBox="0 0 48 48" class="ico"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.7 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.3 29.6 4 24 4 16 4 9.1 8.6 6.3 14.7z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.3 29.6 4 24 4 16 4 9.1 8.6 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.2-2 13.9-5.3l-6.4-5.2C29.4 36.7 26.8 38 24 38c-5.4 0-9.9-3.3-11.5-8l-6.6 5.1C9 39.2 16 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 2.9-3.4 5.2-6.3 6.5l.1.1 6.4 5.2c-.5.5 8.5-4 8.5-15.8 0-1.2-.1-2.1-.4-3.5z"/></svg>
+            <span>Google</span>
+          </a>
+
+          <button class="provider js-open-phone-login" data-provider="phone" aria-label="Registar com Telefone">
+            <svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.6.6 4 .6.6 0 1 .4 1 .9V20c0 1.1-.9 2-2 2C9.6 22 2 14.4 2 5c0-1.1.9-2 2-2h3.6c.5 0 .9.4.9 1 0 1.4.2 2.8.6 4 .1.4 0 .8-.3 1.1l-2.2 2.2z"/></svg>
+            <span>Telefone</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="verifyCodeModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="verifyTitle">Verificar E-mail</h2></header>
+      <section class="modal__content">
+        <p style="text-align: center; margin-bottom: 16px;">Enviámos um código de 6 dígitos para o seu e-mail. Por favor, insira-o abaixo.</p>
+        <form id="form-verify-code" class="auth-form">
+          <label>Código de Verificação
+            <input class="field field--light" type="text" name="code" required placeholder="123456" maxlength="6">
+          </label>
+          <button class="cta cta--block" type="submit">Verificar e Concluir</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="forgotPasswordModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="forgotTitle">Redefinir Senha</h2></header>
+      <section class="modal__content">
+        <p style="text-align: center; margin-bottom: 16px;">Insira o seu e-mail e enviaremos um link para você redefinir a sua senha.</p>
+        <form id="form-forgot-password" class="auth-form">
+          <label>Email
+            <input class="field field--light" type="email" name="email" required placeholder="seu@email.com">
+          </label>
+          <button class="cta cta--block" type="submit">Enviar Link</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="phoneAuthModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="phoneAuthTitle">
+      <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+      <header class="modal__header"><h2 id="phoneAuthTitle">Entrar com Telefone</h2></header>
+      <section class="modal__content">
+        <form id="form-phone-send-code" class="auth-form">
+          <label>Número de Telefone
+            <input class="field field--light" type="tel" name="phone" required placeholder="+5561999999999">
+          </label>
+          <button id="btn-send-phone-code" class="cta cta--block" type="submit">Enviar Código</button>
+        </form>
+        <form id="form-phone-verify-code" class="auth-form is-hidden">
+          <p>Enviámos um código SMS. Por favor, insira-o abaixo.</p>
+          <label>Código de Verificação
+            <input class="field field--light" type="text" name="code" required placeholder="123456" maxlength="6">
+          </label>
+          <button class="cta cta--block" type="submit">Verificar e Entrar</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span id="toastText">Mensagem</span>
+  </div>
 
   <footer class="footer">
     <p>&copy; 2025 SoftMarea. Todos os direitos reservados.</p>

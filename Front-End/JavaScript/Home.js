@@ -38,6 +38,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.showToast = showToast;
 
+  const menuHistorico = document.getElementById('menuHistorico');
+menuHistorico?.addEventListener('click', () => {
+  // fecha o menu (se existir popover) e redireciona:
+  document.getElementById('userMenu')?.classList.remove('is-open');
+  document.getElementById('btnMenu')?.setAttribute('aria-expanded', 'false');
+  window.location.assign('./Historico.html');
+});
+
   /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
   const API_URL = "http://localhost:3000/auth";
 const firebaseConfig = {
@@ -292,10 +300,154 @@ const firebaseConfig = {
   });
 
   /* Formulários de Autenticação */
-  $('#form-login')?.addEventListener('submit', async e => { /* ...seu código de login... */ });
-  $('#form-register')?.addEventListener('submit', async e => { /* ...seu código de registro... */ });
-  $('#form-verify-code')?.addEventListener('submit', async e => { /* ...seu código de verificação... */ });
-  $('#form-forgot-password')?.addEventListener('submit', async e => { /* ...seu código de esqueci a senha... */ });
+
+// Helper para alternar o estado do botão
+const toggleButtonState = (form, isDisabled, text) => {
+  const submitButton = form.querySelector('button[type="submit"]');
+  if (submitButton) {
+    submitButton.disabled = isDisabled;
+    submitButton.textContent = text;
+  }
+};
+
+// Login
+$('#form-login')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.target;
+  toggleButtonState(form, true, 'Entrando...');
+
+  const formData = new FormData(form);
+  const email = formData.get('email');
+  const password = formData.get('password');
+
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    
+    if (!res.ok) {
+      if (res.status === 403 && data.error.includes('verifique seu e-mail')) {
+        userEmailForVerification = email;
+        closeModal(loginModal);
+        openModal(verifyCodeModal);
+        showToast('Seu e-mail não foi verificado. Por favor, insira o código.', 'error', 4000);
+        return;
+      }
+      throw new Error(data.error || `Erro ${res.status}`);
+    }
+
+    localStorage.setItem('sm_token', data.token);
+    setLoggedIn(true, 'login');
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Erro ao fazer login.', 'error');
+  } finally {
+    toggleButtonState(form, false, 'Entrar');
+  }
+});
+
+// Registro
+$('#form-register')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.target;
+  toggleButtonState(form, true, 'Registrando...');
+  
+  const formData = new FormData(form);
+  const name = formData.get('name');
+  const email = formData.get('email');
+  const password = formData.get('password');
+
+  try {
+    const res = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+
+    // Sucesso: armazena email para a próxima etapa
+    userEmailForVerification = email;
+    closeModal(registerModal);
+    openModal(verifyCodeModal);
+    showToast(data.message || 'Código de verificação enviado.', 'success');
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Erro ao registrar.', 'error');
+  } finally {
+    toggleButtonState(form, false, 'Criar conta');
+  }
+});
+
+// Verificação de Código
+$('#form-verify-code')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.target;
+  toggleButtonState(form, true, 'Verificando...');
+
+  if (!userEmailForVerification) {
+     showToast('Erro: O email de registro não foi encontrado. Tente registrar novamente.', 'error');
+     toggleButtonState(form, false, 'Verificar e Concluir');
+     return;
+  }
+  
+  const code = new FormData(form).get('code');
+  const email = userEmailForVerification; // Usa o email armazenado
+
+  try {
+    const res = await fetch(`${API_URL}/verify-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+
+    localStorage.setItem('sm_token', data.token);
+    userEmailForVerification = ''; // Limpa o email
+    setLoggedIn(true, 'register'); // Loga e mostra toast de sucesso no registro
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Erro ao verificar código.', 'error');
+  } finally {
+    toggleButtonState(form, false, 'Verificar e Concluir');
+  }
+});
+
+// Esqueci a Senha
+$('#form-forgot-password')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.target;
+  toggleButtonState(form, true, 'Enviando...');
+
+  const email = new FormData(form).get('email');
+
+  try {
+    const res = await fetch(`${API_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+
+    showToast('Link de redefinição enviado com sucesso (se o e-mail existir).', 'success', 5000);
+    closeModal(forgotPasswordModal);
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Erro ao enviar link.', 'error');
+  } finally {
+    toggleButtonState(form, false, 'Enviar Link');
+  }
+});
+
 
   /* ===== LÓGICA DE LOGIN COM TELEFONE ===== */
   const formSendCode = $('#form-phone-send-code');

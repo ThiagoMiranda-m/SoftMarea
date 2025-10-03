@@ -1,0 +1,140 @@
+/* Mantém a linguagem visual das outras páginas */
+.hist{
+  background:#cfeff4;
+  min-height:calc(100svh - 80px - 64px);
+  padding: clamp(28px, 5vw, 48px) 16px 64px;
+  color:#0e2130;
+  position: relative;      /* para o background quando vazio */
+  overflow: hidden;
+}
+
+/* BG grande quando o estado vazio estiver visível */
+.hist:has(#emptyState:not(.is-hidden))::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image:url("../Midias/Logo Site-Photoroom.png");
+  background-repeat:no-repeat;
+  background-position:center 35%;
+  background-size:clamp(520px, 48vw, 1040px);
+  opacity:.14;
+}
+
+.hist__head{
+  max-width:1200px;
+  margin:0 auto clamp(16px, 3vw, 24px);
+  position:relative; z-index:1;
+}
+.hist__title{
+  margin:0 0 6px;
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 900;
+}
+.hist__sub{ margin:0 0 14px; opacity:.85; }
+
+.hist__controls{
+  display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+}
+.hist__filters{ display:flex; gap:10px; }
+.hist__filters select{
+  padding:12px 14px; border-radius:14px; border:2px solid #173575; background:#fff; color:#0e2130;
+}
+
+:root{
+  --header-h: 80px;     /* altura do header */
+  --back-offset: 56px;  /* distância extra abaixo do header */
+}
+
+.hist .back-wrap{
+  position: sticky;
+  top: 12px;
+  z-index: 1500;           /* abaixo do popover */
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+/* reutiliza a mesma aparência do botão */
+.back-btn{
+  display: inline-block;
+  padding: 14px 20px;
+  border-radius: 18px;
+  background: #1266ac;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(0,0,0,.2);
+  transition: filter .15s ease, transform .06s ease;
+}
+.back-btn:hover{ filter: brightness(1.06); }
+.back-btn:active{ transform: translateY(1px); }
+@media (max-width: 900px){
+  :root{ --back-offset: 70px; }
+}
+
+/* Grid de cards */
+.hist__grid{
+  max-width:1200px; margin: clamp(18px, 3vw, 28px) auto 0;
+  display:grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(12px, 2vw, 16px);
+  position:relative; z-index:1;
+}
+@media (max-width: 720px){
+  .hist__grid{ grid-template-columns: repeat(6, 1fr); }
+}
+@media (min-width: 721px){
+  .hist__grid .hist-card{ grid-column: span 4; } /* 3 por linha */
+}
+@media (max-width: 720px){
+  .hist__grid .hist-card{ grid-column: span 6; } /* 1 por linha */
+}
+
+.hist-card{
+  background:#fff;
+  border-radius:20px;
+  box-shadow:0 18px 50px rgba(0,0,0,.15);
+  padding:16px;
+  display:grid; gap:10px;
+}
+.hist-card__top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.hist-card__id{ font-weight:800; letter-spacing:.2px; opacity:.7; font-size:12px; }
+.hist-card__date{ font-size:12px; opacity:.8; }
+.hist-card__title{ margin:0; font-size:18px; font-weight:800; }
+.hist-card__meta{ display:flex; gap:10px; flex-wrap:wrap; opacity:.9; }
+.badge{ background:#e9f1ff; color:#173575; border-radius:999px; padding:6px 10px; font-weight:700; font-size:12px; }
+.hist-card__body{ opacity:.95; line-height:1.5; }
+.hist-card__footer{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:4px; }
+.hist-card__tags{ display:flex; gap:6px; flex-wrap:wrap; }
+.tag{ background:#dff7e8; color:#0e2130; border-radius:999px; padding:4px 8px; font-size:12px; font-weight:700; }
+.hist-card__cta{
+  padding:10px 14px; border:0; border-radius:14px; cursor:pointer;
+  background:#173575; color:#fff; font-weight:700;
+}
+
+/* Estado vazio */
+.hist__empty{
+  max-width:840px; margin:40px auto 0; text-align:center; color:#0e2130;
+  position:relative; z-index:1;
+}
+.hist__empty img{ display:none !important; }   /* vira background global */
+.hist__empty h3{ margin:0 0 8px; font-size:20px; font-weight:900; }
+.hist__empty p{ margin:0 0 14px; opacity:.85; }
+.hist__cta{
+  display:inline-block; background:#071b8a; color:#fff; text-decoration:none; font-weight:800;
+  padding:12px 16px; border-radius:999px;
+}
+
+.hist__loading{
+  text-align:center; margin:20px 0; opacity:.8; font-weight:700;
+}
+.hist__loadmore{
+  display:block; margin:10px auto 0;
+  padding:10px 16px; border-radius:14px; border:0; background:#1266ac; color:#fff; font-weight:800; cursor:pointer;
+}
+
+.is-hidden{ display:none!important; }
+/* Garante que o popover do usuário fique acima do botão "Voltar" */
+.header{ position: relative; z-index: 3000; }
+.menu-popover{ z-index: 5000; }   /* acima do .back-fixed (1500) */
