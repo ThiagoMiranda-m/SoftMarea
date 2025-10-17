@@ -6,6 +6,7 @@ const {sendVerificationCode, sendPasswordResetEmail } = require('./email');
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountKey.json');
 const { GoogleGenerativeAI } = require('@google/generative-ai'); // <-- Pacote da IA
+const { Client } = require('@googlemaps/google-maps-services-js');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -263,7 +264,7 @@ exports.handleChat = async (req, res) => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     
     // --- INÍCIO DA CORREÇÃO ---
-    // Alterado para o modelo 'gemini-pro', que é mais estável e globalmente disponível.
+    // Alterado para o modelo 'gemini-flash', que é mais estável e globalmente disponível.
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     // --- FIM DA CORREÇÃO ---
 
@@ -305,5 +306,103 @@ exports.handleChat = async (req, res) => {
   } catch (err) {
     console.error("Erro na API do Chatbot:", err);
     res.status(500).json({ error: 'Ocorreu um erro ao comunicar com a IA.' });
+  }
+};
+// ================= MAPA / GOOGLE PLACES =================
+exports.findNearbyPlaces = async (req, res) => {
+  const { lat, lng, type } = req.query;
+
+  if (!lat || !lng || !type) {
+    return res.status(400).json({ error: 'Latitude, longitude e tipo são obrigatórios.' });
+  }
+
+  const client = new Client({});
+  const keyword = type === 'shops' ? 'autopeças' : 'oficina mecânica';
+
+  try {
+    const response = await client.placesNearby({
+      params: {
+        location: `${lat},${lng}`,
+        radius: 10000, // 5km de raio
+        keyword: keyword,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+        language: 'pt-BR',
+      },
+      timeout: 5000,
+    });
+
+    // Pega detalhes de cada local encontrado
+    const placesWithDetails = await Promise.all(
+      response.data.results.map(async (place) => {
+        if (!place.place_id) return null;
+        const detailsResponse = await client.placeDetails({
+          params: {
+            place_id: place.place_id,
+            fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'rating', 'geometry'],
+            key: process.env.GOOGLE_MAPS_API_KEY,
+            language: 'pt-BR',
+          },
+        });
+        return detailsResponse.data.result;
+      })
+    );
+
+    res.json({ places: placesWithDetails.filter(p => p) }); // Filtra nulos
+
+  } catch (err) {
+    console.error('Erro na API do Google Places:', err);
+    res.status(500).json({ error: 'Erro ao buscar locais próximos.' });
+  }
+};
+
+// ================= HISTÓRICO DE DIAGNÓSTICOS =================
+exports.saveHistory = async (req, res) => {
+  try {
+    const userId = req.user.sub; // ID do usuário logado, vindo do token
+    const { brand, model, year, userText, aiConclusion } = req.body;
+
+    if (!userId || !model || !year || !userText || !aiConclusion) {
+      return res.status(400).json({ error: 'Dados insuficientes para salvar o histórico.' });
+    }
+
+    const [result] = await pool.query(
+      'INSERT INTO history (user_id, brand, model, year, userText, aiConclusion) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, brand, model, year, userText, aiConclusion]
+    );
+
+    res.status(201).json({ message: 'Histórico salvo com sucesso!', id: result.insertId });
+
+  } catch (err) {
+    console.error("Erro ao salvar histórico:", err);
+    res.status(500).json({ error: 'Erro interno ao salvar o histórico.' });
+  }
+};
+
+exports.getHistory = async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const { brand, period } = req.query;
+
+    let query = 'SELECT * FROM history WHERE user_id = ?';
+    const params = [userId];
+
+    if (brand) {
+      query += ' AND brand = ?';
+      params.push(brand);
+    }
+
+    if (period) {
+      query += ' AND createdAt >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+      params.push(parseInt(period, 10));
+    }
+
+    query += ' ORDER BY createdAt DESC';
+
+    const [rows] = await pool.query(query, params);
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Erro ao buscar histórico:", err);
+    res.status(500).json({ error: 'Erro interno ao buscar o histórico.' });
   }
 };

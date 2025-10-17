@@ -199,3 +199,47 @@
 /* Garante que o popover do usuário fique acima do botão "Voltar" */
 .header{ position: relative; z-index: 3000; }
 .menu-popover{ z-index: 5000; }   /* acima do .back-fixed (1500) */
+
+/* ===== Estilos extras para o mapa ===== */
+.map-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 10px;
+}
+.map-filter-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #173575;
+  background: #fff;
+  color: #173575;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.map-filter-btn.active {
+  background: #173575;
+  color: #fff;
+}
+.map-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.8);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #173575;
+  z-index: 1000;
+}
+.is-hidden { display: none !important; }
+
+/* ===== Estilos para a InfoWindow do Google Maps ===== */
+.map-popup {
+  color: #0e2130; /* Define a cor do texto para escuro, igual ao do chat */
+  line-height: 1.5;
+}
+
+.map-popup p {
+  margin: 4px 0 !important;
+}
+

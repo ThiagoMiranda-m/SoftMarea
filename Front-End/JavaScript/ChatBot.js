@@ -1,43 +1,212 @@
 "use strict";
 
+// ================== Variáveis Globais para o Mapa ==================
+// Estas variáveis precisam estar no escopo global para que a função de callback do Google Maps funcione corretamente com as outras funções.
+let map;
+let userLatLng = null;
+let currentMarkers = [];
+let infoWindow;
+
+
+// ================== Função de Inicialização do Mapa (Callback do Google) ==================
+// Esta função é chamada pela API do Google Maps quando o script termina de carregar.
+function initMap() {
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+
+  const defaultLocation = { lat: -16.0333, lng: -48.05 }; // Localização padrão
+
+  map = new google.maps.Map(mapEl, {
+    center: defaultLocation,
+    zoom: 5,
+    mapId: 'SOFTMAREA_MAP_ID' // Opcional: para customização avançada
+  });
+  
+  infoWindow = new google.maps.InfoWindow();
+
+  const fallback = (error) => {
+    if (error) {
+        console.warn(`Erro de Geolocalização (código ${error.code}): ${error.message}`);
+    }
+    showToast('Não foi possível obter sua localização.', 'error');
+    userLatLng = defaultLocation;
+    map.setCenter(userLatLng);
+    map.setZoom(13);
+    // Dispara a busca inicial mesmo com a localização padrão
+    document.querySelector('.map-filter-btn.active').click();
+  };
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLatLng = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+
+        map.setCenter(userLatLng);
+        map.setZoom(14);
+        new google.maps.Marker({
+            position: userLatLng,
+            map,
+            title: "Você está aqui!",
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#4285F4",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff"
+            }
+        });
+        // Dispara a busca inicial assim que a localização é obtida
+        document.querySelector('.map-filter-btn.active').click();
+      },
+      fallback
+    );
+  } else {
+    fallback();
+  }
+}
+
+// ================== Funções de Apoio ao Mapa (agora no escopo global) ==================
+
+// Limpa os marcadores antigos do mapa
+function clearMarkers() {
+  for (let i = 0; i < currentMarkers.length; i++) {
+    currentMarkers[i].setMap(null);
+  }
+  currentMarkers = [];
+}
+
+// Formata o conteúdo da janela de informações do marcador
+function formatInfoWindowContent(place) {
+  const hours = place.opening_hours ? (place.opening_hours.open_now ? '<span style="color:green;">Aberto agora</span>' : '<span style="color:red;">Fechado agora</span>') : 'Horário não informado';
+  return `
+    <div class="map-popup">
+      <strong>${place.name}</strong><br>
+      <p style="margin: 4px 0;">${place.formatted_address || ''}</p>
+      <p style="margin: 4px 0;">Telefone: ${place.formatted_phone_number || 'não informado'}</p>
+      <p style="margin: 4px 0;">Horário: ${hours}</p>
+      <p style="margin: 4px 0;">Avaliação: ${place.rating || 'N/A'} ⭐</p>
+    </div>
+  `;
+}
+
+// Busca os locais na API do backend
+async function fetchNearbyPlaces(lat, lng, type) {
+  document.getElementById('mapLoading')?.classList.remove('is-hidden');
+  const token = localStorage.getItem('sm_token');
+  try {
+    const res = await fetch(`http://localhost:3000/auth/places?lat=${lat}&lng=${lng}&type=${type}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!res.ok) throw new Error('Falha ao buscar locais');
+    const data = await res.json();
+    return data.places || [];
+  } catch (err) {
+    console.error(err);
+    showToast('Não foi possível carregar os locais.', 'error');
+    return [];
+  } finally {
+    document.getElementById('mapLoading')?.classList.add('is-hidden');
+  }
+}
+
+// Atualiza os marcadores no mapa com base no filtro
+async function updateMapMarkers(type) {
+  if (!userLatLng || !map) return;
+  
+  clearMarkers();
+  
+  const places = await fetchNearbyPlaces(userLatLng.lat, userLatLng.lng, type);
+  const bounds = new google.maps.LatLngBounds();
+
+  places.forEach(place => {
+    if (place.geometry && place.geometry.location) {
+      const marker = new google.maps.Marker({
+        position: place.geometry.location,
+        map: map,
+        title: place.name,
+      });
+
+      marker.addListener('click', () => {
+        infoWindow.setContent(formatInfoWindowContent(place));
+        infoWindow.open(map, marker);
+      });
+
+      currentMarkers.push(marker);
+      bounds.extend(marker.getPosition());
+    }
+  });
+  
+  if (currentMarkers.length > 0) {
+    // Inclui a posição do usuário no zoom para garantir que ele esteja visível
+    bounds.extend(userLatLng);
+    map.fitBounds(bounds);
+  } else {
+    showToast('Nenhum local encontrado no raio de 5km.', 'success');
+    map.setCenter(userLatLng);
+    map.setZoom(14);
+  }
+}
+
+
+// ================== Código Principal da Página (executado quando o DOM está pronto) ==================
 document.addEventListener('DOMContentLoaded', () => {
   /* ================== Helpers / Seletor ================== */
   const $  = (s, el=document) => el.querySelector(s);
   const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
   /* ================== Toast ================== */
-  let toast = $('#toast');
-  let toastText = $('#toastText');
-  let toastTimer = null;
+  // A função showToast agora está no escopo global para ser acessível pelo fallback do mapa
+  window.toast = $('#toast');
+  window.toastText = $('#toastText');
+  window.toastTimer = null;
 
   function ensureToast(){
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'toast';
-      toast.className = 'toast';
-      toastText = document.createElement('span');
-      toastText.id = 'toastText';
-      toast.appendChild(toastText);
-      document.body.appendChild(toast);
+    if (!window.toast) {
+      window.toast = document.createElement('div');
+      window.toast.id = 'toast';
+      window.toast.className = 'toast';
+      window.toastText = document.createElement('span');
+      window.toastText.id = 'toastText';
+      window.toast.appendChild(window.toastText);
+      document.body.appendChild(window.toast);
     }
-    if (!toastText) {
-      toastText = document.createElement('span');
-      toastText.id = 'toastText';
-      toast.appendChild(toastText);
+    if (!window.toastText) {
+      window.toastText = document.createElement('span');
+      window.toastText.id = 'toastText';
+      window.toast.appendChild(window.toastText);
     }
   }
-  function showToast(message, type='success', ms=2600){
+  window.showToast = function(message, type='success', ms=2600){
     ensureToast();
-    toast.classList.remove('toast--success','toast--error','is-open');
-    toastText.textContent = message;
-    toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
-    requestAnimationFrame(()=> toast.classList.add('is-open'));
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> toast.classList.remove('is-open'), ms);
+    window.toast.classList.remove('toast--success','toast--error','is-open');
+    window.toastText.textContent = message;
+    window.toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
+    requestAnimationFrame(()=> window.toast.classList.add('is-open'));
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(()=> window.toast.classList.remove('is-open'), ms);
   }
 
-  /* ================== Config API ================== */
+
+  /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
   const API_URL = "http://localhost:3000/auth";
+const firebaseConfig = {
+  apiKey: "AIzaSyCD7RMisuimpkztH2N-eFMSB4XuuLSPaNs",
+  authDomain: "softmarea-7eba0.firebaseapp.com",
+  projectId: "softmarea-7eba0",
+  storageBucket: "softmarea-7eba0.firebasestorage.app",
+  messagingSenderId: "44251087941",
+  appId: "1:44251087941:web:d5444c12c8f251731ecf2c",
+  measurementId: "G-GR082GLZY0"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
   /* ================== Header / Auth UI ================== */
   const btnMenu       = $('#btnMenu');
@@ -141,7 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendBtn = $('#composerSend');
   const confirmationButtonsContainer = $('#confirmationButtons');
 
-  let map, mapReady = false;
   const history = [];
   let vehicleInfo = {}; // {brand, model, year}
 
@@ -167,6 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
     el.textContent = text;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
+  
+  // Função global para ser chamada pelo fallback do mapa
+  window.addMsg = addMsg;
 
   function startChatFlow(){
     const p = new URLSearchParams(location.search);
@@ -251,54 +422,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ================== Mapa ================== */
-  btnShop?.addEventListener('click', ()=>{
-    layout.classList.add('show-map');
-    if (!mapReady) initMap();
-    addMsg('Buscando oficinas próximas no mapa à direita…', 'bot');
-  });
-
-  function initMap(){
-    mapReady = true;
-    const mapEl = document.getElementById('map');
-    if (!mapEl) return;
-
-    const mapObj = L.map(mapEl, { zoomControl: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(mapObj);
-
-    const fallback = ()=>{
-      const df = [-16.0333, -48.05];
-      mapObj.setView(df, 13);
-      addShops(df, mapObj);
-    };
-
-    if (navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(pos=>{
-        const latlng = [pos.coords.latitude, pos.coords.longitude];
-        mapObj.setView(latlng, 14);
-        L.marker(latlng).addTo(mapObj).bindPopup('Você está aqui');
-        addShops(latlng, mapObj);
-      }, fallback);
-    } else {
-      fallback();
-    }
-    map = mapObj;
-  }
-  function addShops([lat, lng], ref){
-    const pts = [
-      [lat+0.01,  lng+0.01,  'Oficina Centro'],
-      [lat-0.008, lng+0.014, 'Auto Mecânica Azul'],
-      [lat+0.012, lng-0.012, 'Garage 24h'],
-    ];
-    pts.forEach(([y,x,name])=>{
-      L.marker([y,x]).addTo(ref).bindPopup(name);
+    /* ================== Event Listeners do Mapa ================== */
+    
+    const filterButtons = $$('.map-filter-btn');
+    
+    btnShop.addEventListener('click', () => {
+        if (!isLoggedIn()) {
+          showToast('Faça login para buscar locais próximos.', 'error');
+          openModal($('#loginModal'));
+          return;
+        }
+        $('#chatLayout').classList.add('show-map');
+        addMsg('Buscando oficinas próximas no mapa à direita…', 'bot');
     });
-  }
 
-  /* ================== Boot ================== */
-  startChatFlow();
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+        if (button.classList.contains('active')) return;
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        // A função updateMapMarkers agora está no escopo global e pode ser chamada
+        updateMapMarkers(button.dataset.type);
+        });
+    });
 
   /* ===== Botão "Diagnóstico Concluído" (salva histórico e redireciona) ===== */
   (function(){
@@ -371,4 +517,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   })();
+
+    startChatFlow();
 });
