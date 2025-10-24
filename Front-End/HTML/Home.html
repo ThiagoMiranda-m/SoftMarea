@@ -16,7 +16,7 @@
     </div>
 
     <nav class="header__actions">
-      <button class="btn" id="btnRegistro">Registo</button>
+      <button class="btn" id="btnRegistro">Registro</button>
       <button class="btn" id="btnLogin">Login</button>
 
       <button class="hamburger is-hidden" id="btnMenu" aria-label="Menu" aria-haspopup="true" aria-expanded="false">
@@ -277,7 +277,7 @@
     </div>
   </div>
 
-  <div class="modal" id="phoneAuthModal" aria-hidden="true">
+<div class="modal" id="phoneAuthModal" aria-hidden="true">
     <div class="modal__backdrop" data-close></div>
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="phoneAuthTitle">
       <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
@@ -287,6 +287,8 @@
           <label>Número de Telefone
             <input class="field field--light" type="tel" name="phone" required placeholder="+5561999999999">
           </label>
+          
+          <div id="recaptcha-container"></div>
           <button id="btn-send-phone-code" class="cta cta--block" type="submit">Enviar Código</button>
           </form>
         <form id="form-phone-verify-code" class="auth-form is-hidden">

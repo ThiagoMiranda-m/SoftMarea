@@ -452,26 +452,58 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
   /* ===== LÓGICA DE LOGIN COM TELEFONE ===== */
   const formSendCode = $('#form-phone-send-code');
   const formVerifyCode = $('#form-phone-verify-code');
-  const btnSendPhoneCode = $('#btn-send-phone-code');
+  //const btnSendPhoneCode = $('#btn-send-phone-code');//
 
-  function setupRecaptcha() {
-    if (!btnSendPhoneCode) return;
+function setupRecaptcha() {
+    // 1. Destrói o verifier ANTERIOR, se ele existir na memória
     if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === 'function') {
       window.recaptchaVerifier.clear();
+      console.log("Verifier anterior limpo.");
     }
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('btn-send-phone-code', {
-      'size': 'invisible',
-      'callback': (response) => {}
-    });
-    window.recaptchaVerifier.render();
+
+    // 2. Encontra e limpa o container do DOM
+    const recaptchaContainer = $('#recaptcha-container');
+    if (!recaptchaContainer) {
+      console.error('Container do reCAPTCHA não encontrado.');
+      return;
+    }
+    recaptchaContainer.innerHTML = ''; 
+
+    // 3. Cria o NOVO verifier no container limpo
+    try {
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(recaptchaContainer, { 
+        'size': 'invisible',
+        'callback': (response) => {
+          // Este callback é chamado quando o reCAPTCHA é resolvido
+          // O signInWithPhoneNumber continua a partir daqui
+          console.log("reCAPTCHA resolvido, enviando SMS...");
+        }
+      });
+      
+      // 4. IMPORTANTE: NÃO chame .render() aqui.
+      // O .render() será acionado automaticamente pelo
+      // signInWithPhoneNumber quando o usuário clicar no botão "Enviar Código".
+      console.log("Novo reCAPTCHA verifier pronto.");
+      
+    } catch (err) {
+      console.error("Erro ao criar RecaptchaVerifier:", err);
+      showToast('Erro ao iniciar reCAPTCHA. Tente novamente.', 'error');
+    }
   }
 
-  formSendCode?.addEventListener('click', e => {
+  formSendCode?.addEventListener('submit', async (e) => { // Mudado para 'submit'
       e.preventDefault();
-      if (e.target.tagName !== 'BUTTON') return; // Garante que foi o botão
       
       const phoneNumber = new FormData(formSendCode).get('phone');
       const appVerifier = window.recaptchaVerifier;
+
+      if (!appVerifier) {
+          showToast('reCAPTCHA não inicializado. Tente fechar e abrir o modal.', 'error');
+          return;
+      }
+      
+      const submitButton = $('#btn-send-phone-code');
+      if(submitButton) submitButton.disabled = true;
 
       auth.signInWithPhoneNumber(phoneNumber, appVerifier)
         .then(confirmationResult => {
@@ -481,11 +513,23 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
           showToast('Código SMS enviado!', 'success');
         })
         .catch(err => {
+          // Se falhar (ex: número inválido, reCAPTCHA falhou),
+          // limpamos o verifier e preparamos um novo para a próxima tentativa.
+          if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === 'function') {
+              window.recaptchaVerifier.clear();
+          }
+          setupRecaptcha(); // Prepara um novo verifier
+          
           showToast(`Erro: ${err.message}`, 'error');
+        })
+        .finally(() => {
+           // Reativa o botão
+           if(submitButton) submitButton.disabled = false;
         });
   });
 
   formVerifyCode?.addEventListener('submit', async e => {
+// ... (O restante desta função permanece exatamente igual)
     e.preventDefault();
     const submitButton = e.target.querySelector('button[type="submit"]');
     submitButton.disabled = true;
@@ -516,7 +560,7 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
 
       // 4. Salva o token da sua aplicação e finaliza o login
       localStorage.setItem('sm_token', data.token);
-      setLoggedIn(true, 'login'); // <-- A LINHA QUE FALTAVA!
+      setLoggedIn(true, 'login'); 
       closeModal(phoneAuthModal);
 
     } catch (err) {
