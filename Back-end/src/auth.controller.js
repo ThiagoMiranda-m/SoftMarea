@@ -123,6 +123,12 @@ exports.login = async (req, res) => {
       return res.status(403).json({ error: 'Por favor, verifique seu e-mail antes de fazer o login.' });
     }
 
+    // --- NOVA VERIFICAÇÃO --- 
+    // Verifica se o utilizador tem um password hash. Se não tiver, ele provavelmente usou Google/Telefone.
+    if (!user.password_hash) {
+    return res.status(401).json({ error: 'Login com senha não disponível para esta conta. Tente usar Google ou Telefone.' });
+    }
+
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas.' });
 
