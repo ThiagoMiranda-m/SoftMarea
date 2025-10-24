@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const pool = require('./db');
 const {sendVerificationCode, sendPasswordResetEmail } = require('./email');
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = require('../serviceAccountKey.json');
 const { GoogleGenerativeAI } = require('@google/generative-ai'); // <-- Pacote da IA
 const { Client } = require('@googlemaps/google-maps-services-js');
 
