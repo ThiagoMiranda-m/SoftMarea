@@ -15,6 +15,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000', // Ex: Seu front-end local (Create React App)
   'http://localhost:5173', // Ex: Seu front-end local (Vite)
+  'http://127.0.0.1:5500',            
   // 'https://seu-dominio-de-producao.com' // Adicione seu site aqui
 ];
 
