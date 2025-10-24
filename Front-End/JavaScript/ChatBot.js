@@ -98,7 +98,7 @@ async function fetchNearbyPlaces(lat, lng, type) {
   document.getElementById('mapLoading')?.classList.remove('is-hidden');
   const token = localStorage.getItem('sm_token');
   try {
-    const res = await fetch(`http://localhost:3000/auth/places?lat=${lat}&lng=${lng}&type=${type}`, {
+    const res = await fetch(`https://softmarea.onrender.com/auth/places?lat=${lat}&lng=${lng}&type=${type}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
-  const API_URL = "http://localhost:3000/auth";
+  const API_URL = "https://softmarea.onrender.com/auth";
 const firebaseConfig = {
   apiKey: "AIzaSyCD7RMisuimpkztH2N-eFMSB4XuuLSPaNs",
   authDomain: "softmarea-7eba0.firebaseapp.com",
@@ -381,7 +381,7 @@ const firebaseConfig = {
 
   // Envio para IA
   async function sendToAI(message){
-    const res = await fetch('http://localhost:3000/auth/chat', {
+    const res = await fetch('https://softmarea.onrender.com/auth/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, history, vehicleInfo })
@@ -462,7 +462,7 @@ const firebaseConfig = {
       const token = localStorage.getItem('sm_token');
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch('http://localhost:3000/auth/history', {
+      const res = await fetch('https://softmarea.onrender.com/auth/history', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)

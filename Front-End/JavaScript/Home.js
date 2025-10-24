@@ -47,7 +47,7 @@ menuHistorico?.addEventListener('click', () => {
 });
 
   /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
-  const API_URL = "http://localhost:3000/auth";
+  const API_URL = "https://softmarea.onrender.com/auth";
 const firebaseConfig = {
   apiKey: "AIzaSyCD7RMisuimpkztH2N-eFMSB4XuuLSPaNs",
   authDomain: "softmarea-7eba0.firebaseapp.com",

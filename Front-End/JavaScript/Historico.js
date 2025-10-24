@@ -96,7 +96,7 @@ if (!isLoggedIn()){
 }
 
 /* ================== CONFIG API ================== */
-const API_BASE     = "http://localhost:3000";
+const API_BASE     = "https://softmarea.onrender.com";
 const HISTORY_PATH = "/auth/history";
 
 /* ================== DOM ================== */
