@@ -63,7 +63,7 @@ const firebaseConfig = {
   /* =================== DADOS: MODELOS / ANOS =================== */
   const CAR_DATA = {
     Ford: ["Ka", "Fiesta", "Focus", "Fusion", "EcoSport", "Ranger", "Territory", "Maverick"],
-    Chevrolet: ["Onix", "Onix Plus", "Prisma", "Cruze", "Tracker", "S10", "Montana", "Spin"],
+    Chevrolet: ["Onix", "Onix Plus", "Prisma", "Cruze", "Tracker", "S10", "Montana", "Spin", "Trailblazer", "Equinox", "Captiva", "Camaro"],
     Toyota: ["Etios", "Yaris", "Corolla", "Corolla Cross", "Hilux", "SW4", "RAV4"],
     Honda: ["Fit", "City", "Civic", "HR-V", "WR-V", "CR-V"],
     Volkswagen: ["Gol", "Polo", "Virtus", "T-Cross", "Nivus", "Saveiro", "Jetta"],

@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ================== Config API ================== */
   const API_URL = "http://localhost:3000/auth";
+  const API_HISTORY = "http://localhost:3000/auth/history";
 
   /* ================== Header / Auth UI ================== */
   const btnMenu       = $('#btnMenu');
@@ -94,43 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   menuHistorico?.addEventListener('click', ()=>{
     userMenu?.classList.remove('is-open');
+    btnMenu?.setAttribute('aria-expanded','false');
     window.location.assign('./Historico.html');
   });
   menuSair?.addEventListener('click', ()=>{ userMenu?.classList.remove('is-open'); setLoggedIn(false); });
-
-  /* ================== Modais ================== */
-  const loginModal          = $('#loginModal');
-  const registerModal       = $('#registerModal');
-  const verifyCodeModal     = $('#verifyCodeModal');
-  const forgotPasswordModal = $('#forgotPasswordModal');
-  const phoneAuthModal      = $('#phoneAuthModal');
-
-  const btnOpenLogin        = $('#btnLogin');
-  const btnOpenRegister     = $('#btnRegistro');
-  const btnForgotPassword   = $('#btnForgotPassword');
-
-  function openModal(modal){ if(!modal) return; modal.classList.add('is-open'); document.body.style.overflow='hidden'; }
-  function closeModal(modal){ if(!modal) return; modal.classList.remove('is-open'); document.body.style.overflow=''; }
-
-  window.closeAllAuthModals = function(){
-    closeModal(loginModal);
-    closeModal(registerModal);
-    closeModal(verifyCodeModal);
-    closeModal(forgotPasswordModal);
-    closeModal(phoneAuthModal);
-  };
-
-  btnOpenLogin   ?.addEventListener('click', ()=> openModal(loginModal));
-  btnOpenRegister?.addEventListener('click', ()=> openModal(registerModal));
-  btnForgotPassword?.addEventListener('click', (e)=>{ e.preventDefault(); closeModal(loginModal); openModal(forgotPasswordModal); });
-
-  $$('.js-open-phone-login').forEach(btn=>{
-    btn.addEventListener('click', ()=> openModal(phoneAuthModal));
-  });
-
-  [loginModal, registerModal, verifyCodeModal, forgotPasswordModal, phoneAuthModal].forEach(modal=>{
-    modal?.addEventListener('click', (e)=>{ if (e.target.matches('[data-close], .modal__backdrop')) closeModal(modal); });
-  });
 
   /* ================== Chat ================== */
   const layout = $('#chatLayout');
@@ -139,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const composer = $('#composer');
   const input = $('#composerInput');
   const sendBtn = $('#composerSend');
+  const btnFinish = $('#btnFinish'); // novo botão
   const confirmationButtonsContainer = $('#confirmationButtons');
 
   let map, mapReady = false;
@@ -180,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (vehicleInfo.model && vehicleInfo.year){
-      addMsg(`Olá, vamos começar o seu diágnostico. O seu carro é um ${vehicleInfo.model} de ${vehicleInfo.year}?`);
+      addMsg(`Olá, vamos começar o seu diagnóstico. O seu carro é um ${vehicleInfo.model} de ${vehicleInfo.year}?`);
       showConfirmationButtons();
     } else {
       addMsg('Dados do veículo não encontrados. Por favor, volte e selecione o seu carro.');
@@ -201,11 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
     addMsg("Ok, certo! Conte com as suas palavras o que está acontecendo.");
     composer.classList.remove('is-hidden');
     input.focus();
+    btnFinish?.classList.remove('is-hidden'); // mostra o botão Diagnóstico Concluído
   }
   function handleConfirmNo(){
     confirmationButtonsContainer.innerHTML = '';
     addMsg("Não", "user");
-    addMsg("Beleza, volte a seleção de carro e selecione o seu carro novamente!");
+    addMsg("Beleza, volte à seleção de carro e selecione o seu carro novamente!");
   }
 
   // Envio para IA
@@ -297,78 +267,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ================== Botão Diagnóstico Concluído ================== */
+  btnFinish?.addEventListener('click', async () => {
+    try {
+      const token = localStorage.getItem('sm_token');
+      await fetch(API_HISTORY, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          brand: vehicleInfo.brand,
+          model: vehicleInfo.model,
+          year: vehicleInfo.year,
+          userText: history.find(h => h.role === 'user')?.content || '',
+          aiConclusion: history.findLast(h => h.role === 'assistant')?.content || '',
+          createdAt: new Date().toISOString()
+        })
+      });
+    } catch (err) {
+      console.error('Erro ao salvar histórico:', err);
+    } finally {
+      window.location.assign('./Home.html');
+    }
+  });
+
   /* ================== Boot ================== */
   startChatFlow();
-
-  /* ===== Botão "Diagnóstico Concluído" (salva histórico e redireciona) ===== */
-  (function(){
-    const btnFinish = document.getElementById('btnFinish');
-    if (!btnFinish) return;
-
-    function extractSummary(){
-      const firstUser = (history.find(m => m.role === 'user') || {}).content || '';
-      const lastAI = ([...history].reverse().find(m => m.role === 'assistant') || {}).content || '';
-      return { userText: (firstUser || '').trim(), aiConclusion: (lastAI || '').trim() };
-    }
-
-    async function postHistory(payload){
-      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-      const token = localStorage.getItem('sm_token');
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const res = await fetch('http://localhost:3000/auth/history', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
-      });
-
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.includes('application/json')){
-        throw new Error(await res.text());
-      }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `Erro ${res.status}`);
-      return data;
-    }
-
-    btnFinish.addEventListener('click', async ()=>{
-      if (!isLoggedIn()){
-        showToast('Faça login para salvar no histórico.', 'error', 3200);
-        const lm = document.getElementById('loginModal');
-        if (lm && typeof openModal === 'function') openModal(lm);
-        return;
-      }
-
-      const { userText, aiConclusion } = extractSummary();
-      if (!vehicleInfo?.model || !vehicleInfo?.year){
-        showToast('Dados do veículo ausentes. Volte e selecione o carro.', 'error');
-        return;
-      }
-      if (!userText || !aiConclusion){
-        showToast('Converse com a IA (relato e resposta) antes de concluir.', 'error', 3600);
-        return;
-      }
-
-      btnFinish.disabled = true;
-      const payload = {
-        brand: vehicleInfo.brand || '',
-        model: vehicleInfo.model || '',
-        year:  vehicleInfo.year  || '',
-        userText,
-        aiConclusion,
-        createdAt: new Date().toISOString()
-      };
-
-      try{
-        await postHistory(payload);
-        showToast('Diagnóstico salvo no histórico.', 'success', 2000);
-        window.location.assign('../HTML/Home.html');
-      }catch(err){
-        console.error(err);
-        showToast(err?.message || 'Erro ao salvar diagnóstico.', 'error', 3600);
-      }finally{
-        btnFinish.disabled = false;
-      }
-    });
-  })();
 });
