@@ -11,6 +11,10 @@ router.post('/register', ctrl.register);
 router.post('/verify-code', ctrl.verifyCode);
 router.post('/login', ctrl.login);
 router.get('/me', auth, ctrl.me);
+
+// NOVO: ROTA PARA ATUALIZAÇÃO DO PERFIL
+router.patch('/profile', auth, ctrl.updateProfile); // <--- ROTA ADICIONADA
+
 router.post('/phone-signin', ctrl.phoneSignIn);
 router.post('/forgot-password', ctrl.forgotPassword);
 router.post('/reset-password', ctrl.resetPassword);

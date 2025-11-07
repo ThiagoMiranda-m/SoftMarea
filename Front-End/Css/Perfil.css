@@ -1,0 +1,171 @@
+/* Importa o Home.css para estilos comuns como .header, .footer, .toast */
+
+/* Estilos gerais da página de perfil */
+.profile-main {
+  /* Fundo claro para replicar o visual do Histórico */
+  background: #cfeff4; 
+  color: #0e2130; 
+  
+  min-height: calc(100svh - 80px - 64px);
+  /* Padding superior para dar espaço ao botão fixo */
+  padding: clamp(28px, 5vw, 64px) 16px; 
+  
+  position: relative;
+}
+
+/* Efeito inovador: Fundo sutilmente texturizado */
+.profile-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.1; 
+    background-image: radial-gradient(#173575 1px, transparent 0);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ===== Botão Voltar: Posicionamento FIXED no canto superior direito ===== */
+.back-wrap.fixed-top-right {
+  position: fixed;        /* Fixo no viewport */
+  
+  /* Posição: 80px (altura do header) + 12px de margem */
+  top: 200px;              
+  right: 16px;            /* FIXO AQUI: Garante o alinhamento de 16px da borda direita */
+  left: auto;             /* Essencial para anular qualquer regra de alinhamento à esquerda */
+  
+  z-index: 2000;          
+  display: block;         /* Permite que o right: 16px funcione */
+}
+
+.back-btn{
+  display: inline-block;
+  padding: 14px 20px;
+  border-radius: 18px;
+  background: #1266ac;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(0,0,0,.2);
+  transition: filter .15s ease, transform .06s ease;
+}
+.back-btn:hover{ filter: brightness(1.06); }
+.back-btn:active{ transform: translateY(1px); }
+/* ============================================== */
+
+/* Cartão principal do Perfil */
+.profile-card {
+  width: min(720px, 100%);
+  margin: 0 auto; 
+  
+  background-color: #173575; 
+  color: #fff;
+  
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 40px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  position: relative; 
+  z-index: 1;
+}
+
+/* ... (Restante dos estilos mantidos) ... */
+
+.profile-title {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 3.5vw, 32px);
+  font-weight: 900;
+  color: #fff;
+}
+.profile-sub {
+  margin: 0 0 24px;
+  opacity: 0.8;
+  font-size: 16px;
+}
+.profile-section {
+  display: grid;
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.input-group {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  opacity: 0.9;
+}
+.field--dark {
+  display: block; width: 100%; border: 0; outline: 0;
+  padding: 14px 16px; border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2); 
+  color: #fff;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: border-color .2s ease;
+}
+.field--dark:focus {
+  border-color: #5618ff; 
+  box-shadow: 0 0 0 3px rgba(86, 24, 255, 0.15);
+}
+.field--dark[readonly] {
+  opacity: 0.6;
+  cursor: default;
+}
+.cta--alt {
+  background-color: #ffc107; 
+  color: #173575;
+  font-weight: 800;
+}
+.security-section {
+  padding-bottom: 0;
+}
+.security-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+.security-item:last-child {
+  border-bottom: none;
+}
+.security-label {
+  font-weight: 500;
+  opacity: 0.9;
+}
+.security-status {
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.status-verified {
+  background: #0ea64b; 
+}
+.status-disabled {
+  background: #d03030; 
+}
+.form-feedback {
+    margin-top: -8px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.8;
+}
+.profile-state {
+    text-align: center;
+    padding: 30px;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0.7;
+}
+.is-hidden { display: none !important; }
+
+#btnChangePassword {
+    background: #071b8a;
+}
+.cta--small { padding: 10px 14px; border-radius: 12px; }

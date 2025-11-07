@@ -139,9 +139,98 @@ exports.login = async (req, res) => {
   }
 };
 
+// =================== ALTERAÇÃO AQUI: BUSCA DADOS COMPLETOS ===================
 exports.me = async (req, res) => {
-  return res.json({ userId: req.user.sub, email: req.user.email });
+  try {
+    const [rows] = await pool.query('SELECT id, name, email, phone_number, is_verified FROM users WHERE id = ?', [req.user.sub]);
+    const user = rows[0];
+    
+    if (!user) {
+        return res.status(404).json({ error: "Usuário não encontrado." });
+    }
+    
+    // Retorna todos os campos necessários para a página de perfil
+    return res.json({ 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        phone_number: user.phone_number,
+        is_verified: user.is_verified
+    });
+  } catch (err) {
+    console.error("Erro ao buscar dados do usuário:", err);
+    return res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
 };
+// =============================================================================
+
+// =================== NOVO: FUNÇÃO PARA ATUALIZAR PERFIL ======================
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const { name, phone_number } = req.body;
+
+    // 1. Validação mínima dos dados
+    if (!name && phone_number === undefined) {
+      return res.status(400).json({ error: "Pelo menos o nome ou telefone deve ser fornecido para a atualização." });
+    }
+
+    let query = 'UPDATE users SET ';
+    const params = [];
+    const fields = [];
+
+    // Adiciona nome à atualização, se fornecido
+    if (name !== undefined) {
+      fields.push('name = ?');
+      params.push(String(name).trim());
+    }
+    
+    // Adiciona telefone à atualização. Permite enviar null ou string vazia para limpar o campo.
+    if (phone_number !== undefined) {
+      fields.push('phone_number = ?');
+      params.push(phone_number ? String(phone_number).trim() : null); 
+    }
+
+    if (fields.length === 0) {
+      // Se a validação inicial passar mas nenhum campo for alterado (por exemplo, todos undefined)
+      return res.status(400).json({ error: "Nenhum campo válido fornecido para atualização." });
+    }
+
+    // 2. Construção e Execução da Query
+    query += fields.join(', ') + ' WHERE id = ?';
+    params.push(userId);
+
+    const [result] = await pool.query(query, params);
+
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Usuário não encontrado ou nenhum dado alterado." });
+    }
+
+    // 3. Busca e Retorna os dados atualizados
+    const [rows] = await pool.query('SELECT id, name, email, phone_number, is_verified FROM users WHERE id = ?', [userId]);
+    const updatedUser = rows[0];
+    
+    if (!updatedUser) {
+        return res.status(500).json({ error: "Erro ao buscar dados do usuário após atualização." });
+    }
+
+    return res.status(200).json({ 
+        message: 'Perfil atualizado com sucesso!',
+        user: { 
+            id: updatedUser.id, 
+            name: updatedUser.name, 
+            email: updatedUser.email,
+            phone_number: updatedUser.phone_number,
+            is_verified: updatedUser.is_verified,
+        }
+    });
+
+  } catch (err) {
+    console.error("Erro ao atualizar perfil:", err);
+    return res.status(500).json({ error: 'Erro interno ao atualizar o perfil.' });
+  }
+};
+// =============================================================================
 
 
 exports.forgotPassword = async (req, res) => {

@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
   const API_URL = "http://localhost:3000/auth";
-
+  const API_HISTORY = `${API_URL}/history`; // NOVO: URL para salvar histórico
   /* ================== Header / Auth UI ================== */
   const btnMenu       = $('#btnMenu');
   const userMenu      = $('#userMenu');
@@ -446,29 +446,47 @@ document.addEventListener('DOMContentLoaded', () => {
       return { userText: (firstUser || '').trim(), aiConclusion: (lastAI || '').trim() };
     }
 
+    // FUNÇÃO CORRIGIDA
     async function postHistory(payload){
       const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
       const token = localStorage.getItem('sm_token');
-      await fetch(API_HISTORY, {
+      if (token) headers.Authorization = `Bearer ${token}`; // Adiciona o token de autenticação
+
+      const res = await fetch(API_HISTORY, { // Agora API_HISTORY está definido no escopo do arquivo
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
       });
+      
+      const text = await res.text();
 
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.includes('application/json')){
-        throw new Error(await res.text());
+      if (!res.ok) {
+          let errorMsg = text || `Erro ${res.status}`;
+          try {
+              const data = JSON.parse(text);
+              errorMsg = data.error || errorMsg;
+          } catch (e) {
+              // Se não for JSON, usa a mensagem de texto
+          }
+          throw new Error(errorMsg);
       }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `Erro ${res.status}`);
-      return data;
+      
+      // Tenta retornar o JSON
+      try {
+          return JSON.parse(text);
+      } catch (e) {
+          // Fallback se a resposta for bem-sucedida, mas não contiver JSON (ex: status 201 com body vazio)
+          return { message: "Histórico salvo." };
+      }
     }
+
 
     btnFinish.addEventListener('click', async ()=>{
       if (!isLoggedIn()){
         showToast('Faça login para salvar no histórico.', 'error', 3200);
         const lm = document.getElementById('loginModal');
-        if (lm && typeof openModal === 'function') openModal(lm);
+        // Assume que existe uma função global openModal no escopo (definida em Home.js)
+        if (lm && window.openModal) window.openModal(lm); 
         return;
       }
 
@@ -489,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         year:  vehicleInfo.year  || '',
         userText,
         aiConclusion,
-        createdAt: new Date().toISOString()
+        // O campo 'createdAt' não é mais necessário no frontend, o backend deve gerá-lo.
       };
 
       try{

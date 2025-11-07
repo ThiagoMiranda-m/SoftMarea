@@ -30,7 +30,13 @@ body{
   border-bottom:1px solid #1c0e5a;
   display:flex; align-items:center; justify-content:center;
 }
-.header__brand{ position:absolute; left:16px; top:12px; }
+.header__brand{
+ 
+    cursor: pointer;
+    display: block;
+    line-height: 1;
+ position:absolute; left:16px; top:12px;
+ }
 .img-logo{ width: 3em; height: auto; }
 
 .header__actions{
@@ -161,6 +167,100 @@ body{
 @media (max-width:800px){
   :root{ --active-w:92vw; --side-w:clamp(72px, 15vw, 120px); }
 }
+
+/* ======================================================================= */
+/* ====== INÍCIO: MEDIA QUERIES Adicionais para Melhor Responsividade ====== */
+/* ======================================================================= */
+
+/* Ajustes para telas menores (smartphones) */
+@media (max-width: 600px) {
+    /* Layout do Panorama: Reduz a altura e a largura inativa para caber mais */
+    :root {
+        --side-w: 12vw; /* Deixa as laterais bem finas */
+        --active-w: 90vw; /* Aumenta o painel ativo para caber melhor o conteúdo */
+        --logo-size: 80px; /* Reduz o tamanho da logo */
+        --radius: 20px;
+    }
+    
+    /* Panorama: Ajusta o overflow para permitir scroll em telas estreitas */
+    .panorama {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        height: auto;
+        min-height: calc(100svh - 80px);
+    }
+    
+    /* Painel: Garante que o painel inativo tenha altura suficiente para rolar */
+    .panel:not(.active) {
+        flex: 0 0 var(--side-w); /* Mantém largura fina */
+        min-width: var(--side-w); /* Evita que fique menor que o mínimo */
+    }
+
+    /* O painel ativo deve forçar uma largura mínima para o formulário */
+    .panel.active {
+        flex-basis: var(--active-w);
+        min-width: var(--active-w);
+    }
+
+    /* Header: Esconde botões de Login/Registro se estiver muito apertado */
+    .header__actions .btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    /* Conteúdo do painel (Formulário) */
+    .panel__content {
+        padding: 20px;
+        width: 95%; /* Ocupa quase toda a largura do painel ativo */
+    }
+}
+
+/* Ajustes para telas muito pequenas (Mobile em pé) */
+@media (max-width: 480px) {
+    /* Header: Remove os botões de Login/Registro para focar no Hamburger (se logado) */
+    .header__actions .btn {
+        display: none;
+    }
+    /* O hamburger (ou a falta de botões) deve ter espaço */
+    .header__actions {
+        right: 8px;
+    }
+
+    /* Layout do Panorama: Ajustes Finais */
+    :root {
+        --side-w: 10vw;
+        --logo-size: 60px;
+    }
+
+    /* Seção Sobre Nós / Contato: Força o layout de coluna */
+    .about-contact .ac-inner { 
+        grid-template-columns: 1fr;
+    }
+    .about-contact .ac-hero { 
+        width: 90%; /* Aumenta a imagem de fundo para preencher */
+        top: 60%;
+    }
+}
+
+
+/* Ajustes para tablets e telas médias (entre 800px e 1200px) */
+@media (min-width: 801px) and (max-width: 1200px) {
+    /* Layout do Panorama: Um pouco mais de espaço nas laterais */
+    :root {
+        --side-w: 10vw;
+        --active-w: 75vw;
+    }
+
+    /* Seção Sobre Nós / Contato: Um pouco mais de padding */
+    .about-contact {
+        padding: 64px 24px;
+    }
+}
+
+/* ======================================================================= */
+/* ====== FIM: MEDIA QUERIES Adicionais para Melhor Responsividade ======== */
+/* ======================================================================= */
+
 
 /* ========== SECTION: SOBRE NÓS + CONTATO (abaixo) ========== */
 .about-contact{

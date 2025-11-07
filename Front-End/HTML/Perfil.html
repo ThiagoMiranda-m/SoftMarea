@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SoftMarea • Meu Perfil</title>
+
+  <link rel="stylesheet" href="../Css/Home.css" />
+  <link rel="stylesheet" href="../Css/Perfil.css" /> 
+</head>
+<body>
+  <header class="header">
+    <div class="header__brand">
+  <a href="../HTML/Home.html" aria-label="Voltar para a página inicial SoftMarea">
+    <img class="img-logo" src="../Midias/Logo Site-Photoroom.png" alt="Logo SoftMarea">
+  </a>
+</div>
+    <nav class="header__actions">
+      <button class="btn" id="btnRegistro">Registro</button>
+      <button class="btn" id="btnLogin">Login</button>
+
+      <button class="hamburger is-hidden" id="btnMenu" aria-label="Menu" aria-haspopup="true" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="menu-popover" id="userMenu" role="menu" aria-label="Menu do utilizador">
+        <button class="menu-item" id="menuHistorico" role="menuitem">Histórico</button>
+        <button class="menu-item" id="menuSair" role="menuitem">Sair</button>
+      </div>
+    </nav>
+  </header>
+ <div class="back-wrap fixed-top-right">
+      <a class="back-btn" href="../HTML/Home.html">Voltar à seleção do veículo</a>
+  </div>
+  <main class="profile-main">
+   
+    <div class="profile-card">
+        <h1 class="profile-title">Meu Perfil SoftMarea</h1>
+        <p class="profile-sub">Gerencie suas informações pessoais e credenciais de segurança.</p>
+        
+        <div id="loadingState" class="profile-state">Carregando dados do usuário...</div>
+
+        <form id="profileForm" class="profile-section is-hidden" autocomplete="off">
+            <h3 class="section-title">Dados Pessoais</h3>
+
+            <label class="input-group">Nome
+                <input class="field field--dark" type="text" id="profileName" name="name" required>
+            </label>
+            <label class="input-group">E-mail
+                <input class="field field--dark" type="email" id="profileEmail" name="email" readonly aria-readonly="true">
+            </label>
+            <label class="input-group">Telefone (opcional)
+                <input class="field field--dark" type="tel" id="profilePhone" name="phone_number">
+            </label>
+
+            <button class="cta cta--block cta--alt" type="submit" id="btnUpdateProfile">Salvar Alterações</button>
+            <p class="form-feedback" id="profileMessage"></p>
+        </form>
+
+        <div class="profile-section security-section is-hidden">
+            <h3 class="section-title">Segurança</h3>
+            <div class="security-item">
+                <span class="security-label">Alterar Senha</span>
+                <button class="cta cta--small" id="btnChangePassword">Redefinir Senha</button>
+            </div>
+            <div class="security-item">
+                <span class="security-label">Conta Verificada</span>
+                <span class="security-status status-verified" id="verificationStatus">Sim</span>
+            </div>
+        </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span id="toastText">Mensagem</span>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 SoftMarea. Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="../JavaScript/Perfil.js" defer></script>
+</body>
+</html>

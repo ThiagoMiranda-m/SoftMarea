@@ -52,6 +52,7 @@ function updateAuthUI(logged){
     btnMenu?.setAttribute('aria-expanded','false');
   }
 }
+
 function setLoggedIn(v){
   if (!v){
     localStorage.removeItem('sm_token');
@@ -88,6 +89,12 @@ menuHistorico?.addEventListener('click', ()=>{
 menuSair?.addEventListener('click', ()=>{
   userMenu?.classList.remove('is-open');
   setLoggedIn(false);
+});
+  const menuPerfil = document.getElementById('menuPerfil');
+menuPerfil?.addEventListener('click', () => {
+  document.getElementById('userMenu')?.classList.remove('is-open');
+  document.getElementById('btnMenu')?.setAttribute('aria-expanded', 'false');
+  window.location.assign('./Perfil.html'); // Redireciona para o novo HTML
 });
 
 /* ================= Proteção de rota ================= */

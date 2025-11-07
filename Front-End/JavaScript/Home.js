@@ -46,6 +46,12 @@ menuHistorico?.addEventListener('click', () => {
   window.location.assign('./Historico.html');
 });
 
+const menuPerfil = document.getElementById('menuPerfil');
+menuPerfil?.addEventListener('click', () => {
+  document.getElementById('userMenu')?.classList.remove('is-open');
+  document.getElementById('btnMenu')?.setAttribute('aria-expanded', 'false');
+  window.location.assign('./Perfil.html'); // Redireciona para o novo HTML
+});
   /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
   const API_URL = "http://localhost:3000/auth";
 const firebaseConfig = {
@@ -67,7 +73,7 @@ const firebaseConfig = {
     Toyota: ["Etios", "Yaris", "Corolla", "Corolla Cross", "Hilux", "SW4", "RAV4"],
     Honda: ["Fit", "City", "Civic", "HR-V", "WR-V", "CR-V"],
     Volkswagen: ["Gol", "Polo", "Virtus", "T-Cross", "Nivus", "Saveiro", "Jetta"],
-    Fiat: ["Mobi", "Argo", "Cronos", "Pulse", "Fastback", "Toro", "Strada"]
+    Fiat: ["Marea", "Mobi", "Argo", "Cronos", "Pulse", "Fastback", "Toro", "Strada"]
   };
 
   function generateYears(from = 1995, to = (new Date()).getFullYear()) {
