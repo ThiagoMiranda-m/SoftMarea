@@ -6,22 +6,27 @@ const auth = require('./auth.middleware');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
+//ROTAS DE AUTENTICAÇÃO
 router.post('/register', ctrl.register);
 router.post('/verify-code', ctrl.verifyCode);
 router.post('/login', ctrl.login);
 router.get('/me', auth, ctrl.me);
 router.post('/phone-signin', ctrl.phoneSignIn);
-
-// Rotas para esquecer a senha
 router.post('/forgot-password', ctrl.forgotPassword);
 router.post('/reset-password', ctrl.resetPassword);
 
 // NOVA ROTA PARA O CHATBOT
 router.post('/chat', ctrl.handleChat);
 
+//ROTA DO MAPA (NOVA)
+router.get('/places', auth, ctrl.findNearbyPlaces);
+
+// ROTAS PARA O HISTÓRICO DE DIAGNÓSTICO
+router.post('/history', auth, ctrl.saveHistory);
+router.get('/history', auth, ctrl.getHistory);
+
 // ==== ROTAS DE LOGIN COM O GOOGLE ====
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
 router.get('/google/callback',
   passport.authenticate('google', {
     failureRedirect: 'http://127.0.0.1:5500/Front-End/HTML/Home.html',

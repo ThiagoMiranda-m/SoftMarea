@@ -6,12 +6,11 @@
   <title>SoftMarea • Diagnóstico</title>
   <link rel="stylesheet" href="../Css/Home.css" />
   <link rel="stylesheet" href="../Css/ChatBot.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <header class="header">
     <div class="header__brand">
-      <img class="img-logo" src="../Midias/Logo Site-Photoroom.png" alt="">
+      <img class="img-logo" src="../Midias/Logo Site-Photoroom.png" alt="Logo SoftMarea">
     </div>
     <nav class="header__actions">
       <button class="btn" id="btnRegistro">Registro</button>
@@ -26,30 +25,22 @@
     </nav>
   </header>
 
-
-
   <section class="chat-section">
-  <div class="back-wrap">
-    <a class="back-btn" href="../HTML/Home.html">Voltar à seleção do veículo</a>
-  </div>
+    <div class="back-wrap">
+      <a class="back-btn" href="../HTML/Home.html">Voltar à seleção do veículo</a>
+    </div>
     <div class="chat-layout" id="chatLayout">
       <article class="chat-card">
         <h2 class="chat-title" id="caseTitle">Diagnóstico</h2>
         <p class="chat-sub" id="caseSub">Descreva o problema que está acontecendo com o veículo.</p>
-
         <div class="sm-chat__scroll" id="chatBox" aria-live="polite"></div>
-
         <div class="chat-actions" id="confirmationButtons"></div>
-
         <div class="sm-chat__actions">
           <form id="composer" class="sm-composer is-hidden" autocomplete="off">
             <input id="composerInput" class="sm-composer__input" type="text" placeholder="Digite sua mensagem…" required />
             <button id="composerSend" class="sm-composer__send" type="submit">Enviar</button>
           </form>
-
-          <!-- Botão novo (fica abaixo do Enviar) -->
           <button class="sm-finish" id="btnFinish" type="button">Diagnóstico Concluído</button>
-
 
           <!-- Mantém no lugar tradicional -->
           <button class="action-btn" id="btnContactShop" type="button">Contatar a mecânica</button>
@@ -57,17 +48,26 @@
       </article>
 
       <aside class="map-card">
+        <div class="map-filters">
+          <button class="map-filter-btn active" data-type="mechanics">Oficinas</button>
+          <button class="map-filter-btn" data-type="shops">Lojas de Peças</button>
+        </div>
         <div id="map"></div>
+        <div id="mapLoading" class="map-loading is-hidden">Buscando...</div>
       </aside>
-    </div>
+      </div>
   </section>
 
-  <!-- ===== Modais (iguais aos da Home) ===== -->
-  <div class="modal" id="loginModal" aria-hidden="true">
+    <!-- ===== Modais (iguais aos da Home) ===== -->
+
+    <div class="modal" id="loginModal" aria-hidden="true">
     <div class="modal__backdrop" data-close></div>
+
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
       <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
+
       <header class="modal__header"><h2 id="loginTitle">Entrar</h2></header>
+
       <section class="modal__content">
         <form id="form-login" class="auth-form" autocomplete="on">
           <label>Email
@@ -90,6 +90,7 @@
             <svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.6.6 4 .6.6 0 1 .4 1 .9V20c0 1.1-.9 2-2 2C9.6 22 2 14.4 2 5c0-1.1.9-2 2-2h3.6c.5 0 .9.4.9 1 0 1.4.2 2.8.6 4 .1.4 0 .8-.3 1.1l-2.2 2.2z"/></svg>
             <span>Telefone</span>
           </button>
+
         </div>
       </section>
     </div>
@@ -97,9 +98,12 @@
 
   <div class="modal" id="registerModal" aria-hidden="true">
     <div class="modal__backdrop" data-close></div>
+
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
       <button class="modal__close" aria-label="Fechar" title="Fechar" data-close>&times;</button>
-      <header class="modal__header"><h2 id="registerTitle">Criar conta</h2></header>
+
+    <header class="modal__header"><h2 id="registerTitle">Criar conta</h2></header>
+
       <section class="modal__content">
         <form id="form-register" class="auth-form" autocomplete="on">
           <label>Nome
@@ -111,7 +115,8 @@
           <label>Senha
             <input id="registerPassword" class="field field--light" type="password" name="password" required placeholder="Crie uma senha">
           </label>
-          <div id="password-reqs" class="password-reqs"></div>
+          <div id="password-reqs" class="password-reqs">
+0            </div>
           <button class="cta cta--block" type="submit">Criar conta</button>
         </form>
 
@@ -125,6 +130,7 @@
             <svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.6.6 4 .6.6 0 1 .4 1 .9V20c0 1.1-.9 2-2 2C9.6 22 2 14.4 2 5c0-1.1.9-2 2-2h3.6c.5 0 .9.4.9 1 0 1.4.2 2.8.6 4 .1.4 0 .8-.3 1.1l-2.2 2.2z"/></svg>
             <span>Telefone</span>
           </button>
+
         </div>
       </section>
     </div>
@@ -175,7 +181,7 @@
             <input class="field field--light" type="tel" name="phone" required placeholder="+5561999999999">
           </label>
           <button id="btn-send-phone-code" class="cta cta--block" type="submit">Enviar Código</button>
-        </form>
+          </form>
         <form id="form-phone-verify-code" class="auth-form is-hidden">
           <p>Enviámos um código SMS. Por favor, insira-o abaixo.</p>
           <label>Código de Verificação
@@ -186,7 +192,6 @@
       </section>
     </div>
   </div>
-
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
     <span id="toastText">Mensagem</span>
   </div>
@@ -195,7 +200,10 @@
     <p>&copy; 2025 SoftMarea. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+ <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwxYolUkoOmzrw-9CR9enqhgfJdBpt1SE&callback=initMap" defer></script>
   <script src="../JavaScript/ChatBot.js"></script>
 </body>
 </html>

@@ -1,44 +1,200 @@
 "use strict";
 
+// ================== Variáveis Globais para o Mapa ==================
+// Estas variáveis precisam estar no escopo global para que a função de callback do Google Maps funcione corretamente com as outras funções.
+let map;
+let userLatLng = null;
+let currentMarkers = [];
+let infoWindow;
+
+
+// ================== Função de Inicialização do Mapa (Callback do Google) ==================
+// Esta função é chamada pela API do Google Maps quando o script termina de carregar.
+function initMap() {
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+
+  const defaultLocation = { lat: -16.0333, lng: -48.05 }; // Localização padrão
+
+  map = new google.maps.Map(mapEl, {
+    center: defaultLocation,
+    zoom: 5,
+    mapId: 'SOFTMAREA_MAP_ID' // Opcional: para customização avançada
+  });
+  
+  infoWindow = new google.maps.InfoWindow();
+
+  const fallback = (error) => {
+    if (error) {
+        console.warn(`Erro de Geolocalização (código ${error.code}): ${error.message}`);
+    }
+    showToast('Não foi possível obter sua localização.', 'error');
+    userLatLng = defaultLocation;
+    map.setCenter(userLatLng);
+    map.setZoom(13);
+    // Dispara a busca inicial mesmo com a localização padrão
+    document.querySelector('.map-filter-btn.active').click();
+  };
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLatLng = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+
+        map.setCenter(userLatLng);
+        map.setZoom(14);
+        new google.maps.Marker({
+            position: userLatLng,
+            map,
+            title: "Você está aqui!",
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#4285F4",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff"
+            }
+        });
+        // Dispara a busca inicial assim que a localização é obtida
+        document.querySelector('.map-filter-btn.active').click();
+      },
+      fallback
+    );
+  } else {
+    fallback();
+  }
+}
+
+// ================== Funções de Apoio ao Mapa (agora no escopo global) ==================
+
+// Limpa os marcadores antigos do mapa
+function clearMarkers() {
+  for (let i = 0; i < currentMarkers.length; i++) {
+    currentMarkers[i].setMap(null);
+  }
+  currentMarkers = [];
+}
+
+// Formata o conteúdo da janela de informações do marcador
+function formatInfoWindowContent(place) {
+  const hours = place.opening_hours ? (place.opening_hours.open_now ? '<span style="color:green;">Aberto agora</span>' : '<span style="color:red;">Fechado agora</span>') : 'Horário não informado';
+  return `
+    <div class="map-popup">
+      <strong>${place.name}</strong><br>
+      <p style="margin: 4px 0;">${place.formatted_address || ''}</p>
+      <p style="margin: 4px 0;">Telefone: ${place.formatted_phone_number || 'não informado'}</p>
+      <p style="margin: 4px 0;">Horário: ${hours}</p>
+      <p style="margin: 4px 0;">Avaliação: ${place.rating || 'N/A'} ⭐</p>
+    </div>
+  `;
+}
+
+// Busca os locais na API do backend
+async function fetchNearbyPlaces(lat, lng, type) {
+  document.getElementById('mapLoading')?.classList.remove('is-hidden');
+  const token = localStorage.getItem('sm_token');
+  try {
+    const res = await fetch(`http://localhost:3000/auth/places?lat=${lat}&lng=${lng}&type=${type}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!res.ok) throw new Error('Falha ao buscar locais');
+    const data = await res.json();
+    return data.places || [];
+  } catch (err) {
+    console.error(err);
+    showToast('Não foi possível carregar os locais.', 'error');
+    return [];
+  } finally {
+    document.getElementById('mapLoading')?.classList.add('is-hidden');
+  }
+}
+
+// Atualiza os marcadores no mapa com base no filtro
+async function updateMapMarkers(type) {
+  if (!userLatLng || !map) return;
+  
+  clearMarkers();
+  
+  const places = await fetchNearbyPlaces(userLatLng.lat, userLatLng.lng, type);
+  const bounds = new google.maps.LatLngBounds();
+
+  places.forEach(place => {
+    if (place.geometry && place.geometry.location) {
+      const marker = new google.maps.Marker({
+        position: place.geometry.location,
+        map: map,
+        title: place.name,
+      });
+
+      marker.addListener('click', () => {
+        infoWindow.setContent(formatInfoWindowContent(place));
+        infoWindow.open(map, marker);
+      });
+
+      currentMarkers.push(marker);
+      bounds.extend(marker.getPosition());
+    }
+  });
+  
+  if (currentMarkers.length > 0) {
+    // Inclui a posição do usuário no zoom para garantir que ele esteja visível
+    bounds.extend(userLatLng);
+    map.fitBounds(bounds);
+  } else {
+    showToast('Nenhum local encontrado no raio de 5km.', 'success');
+    map.setCenter(userLatLng);
+    map.setZoom(14);
+  }
+}
+
+
+// ================== Código Principal da Página (executado quando o DOM está pronto) ==================
 document.addEventListener('DOMContentLoaded', () => {
   /* ================== Helpers / Seletor ================== */
   const $  = (s, el=document) => el.querySelector(s);
   const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
   /* ================== Toast ================== */
-  let toast = $('#toast');
-  let toastText = $('#toastText');
-  let toastTimer = null;
+  // A função showToast agora está no escopo global para ser acessível pelo fallback do mapa
+  window.toast = $('#toast');
+  window.toastText = $('#toastText');
+  window.toastTimer = null;
 
   function ensureToast(){
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'toast';
-      toast.className = 'toast';
-      toastText = document.createElement('span');
-      toastText.id = 'toastText';
-      toast.appendChild(toastText);
-      document.body.appendChild(toast);
+    if (!window.toast) {
+      window.toast = document.createElement('div');
+      window.toast.id = 'toast';
+      window.toast.className = 'toast';
+      window.toastText = document.createElement('span');
+      window.toastText.id = 'toastText';
+      window.toast.appendChild(window.toastText);
+      document.body.appendChild(window.toast);
     }
-    if (!toastText) {
-      toastText = document.createElement('span');
-      toastText.id = 'toastText';
-      toast.appendChild(toastText);
+    if (!window.toastText) {
+      window.toastText = document.createElement('span');
+      window.toastText.id = 'toastText';
+      window.toast.appendChild(window.toastText);
     }
   }
-  function showToast(message, type='success', ms=2600){
+  window.showToast = function(message, type='success', ms=2600){
     ensureToast();
-    toast.classList.remove('toast--success','toast--error','is-open');
-    toastText.textContent = message;
-    toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
-    requestAnimationFrame(()=> toast.classList.add('is-open'));
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> toast.classList.remove('is-open'), ms);
+    window.toast.classList.remove('toast--success','toast--error','is-open');
+    window.toastText.textContent = message;
+    window.toast.classList.add(type === 'error' ? 'toast--error' : 'toast--success');
+    requestAnimationFrame(()=> window.toast.classList.add('is-open'));
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(()=> window.toast.classList.remove('is-open'), ms);
   }
 
-  /* ================== Config API ================== */
+
+  /* ================= CONFIGURAÇÃO DA API E FIREBASE ================= */
   const API_URL = "http://localhost:3000/auth";
-  const API_HISTORY = "http://localhost:3000/auth/history";
 
   /* ================== Header / Auth UI ================== */
   const btnMenu       = $('#btnMenu');
@@ -110,7 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnFinish = $('#btnFinish'); // novo botão
   const confirmationButtonsContainer = $('#confirmationButtons');
 
-  let map, mapReady = false;
   const history = [];
   let vehicleInfo = {}; // {brand, model, year}
 
@@ -136,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
     el.textContent = text;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
+  
+  // Função global para ser chamada pelo fallback do mapa
+  window.addMsg = addMsg;
 
   function startChatFlow(){
     const p = new URLSearchParams(location.search);
@@ -221,12 +379,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ================== Mapa ================== */
-  btnShop?.addEventListener('click', ()=>{
-    layout.classList.add('show-map');
-    if (!mapReady) initMap();
-    addMsg('Buscando oficinas próximas no mapa à direita…', 'bot');
-  });
+    /* ================== Event Listeners do Mapa ================== */
+    
+    const filterButtons = $$('.map-filter-btn');
+    
+    btnShop.addEventListener('click', () => {
+        if (!isLoggedIn()) {
+          showToast('Faça login para buscar locais próximos.', 'error');
+          openModal($('#loginModal'));
+          return;
+        }
+        $('#chatLayout').classList.add('show-map');
+        addMsg('Buscando oficinas próximas no mapa à direita…', 'bot');
+    });
 
   function initMap(){
     mapReady = true;
@@ -267,32 +432,76 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ================== Botão Diagnóstico Concluído ================== */
-  btnFinish?.addEventListener('click', async () => {
-    try {
+  /* ================== Boot ================== */
+  startChatFlow();
+
+  /* ===== Botão "Diagnóstico Concluído" (salva histórico e redireciona) ===== */
+  (function(){
+    const btnFinish = document.getElementById('btnFinish');
+    if (!btnFinish) return;
+
+    function extractSummary(){
+      const firstUser = (history.find(m => m.role === 'user') || {}).content || '';
+      const lastAI = ([...history].reverse().find(m => m.role === 'assistant') || {}).content || '';
+      return { userText: (firstUser || '').trim(), aiConclusion: (lastAI || '').trim() };
+    }
+
+    async function postHistory(payload){
+      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
       const token = localStorage.getItem('sm_token');
       await fetch(API_HISTORY, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          brand: vehicleInfo.brand,
-          model: vehicleInfo.model,
-          year: vehicleInfo.year,
-          userText: history.find(h => h.role === 'user')?.content || '',
-          aiConclusion: history.findLast(h => h.role === 'assistant')?.content || '',
-          createdAt: new Date().toISOString()
-        })
+        headers,
+        body: JSON.stringify(payload)
       });
-    } catch (err) {
-      console.error('Erro ao salvar histórico:', err);
-    } finally {
-      window.location.assign('./Home.html');
-    }
-  });
 
-  /* ================== Boot ================== */
-  startChatFlow();
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json')){
+        throw new Error(await res.text());
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || `Erro ${res.status}`);
+      return data;
+    }
+
+    btnFinish.addEventListener('click', async ()=>{
+      if (!isLoggedIn()){
+        showToast('Faça login para salvar no histórico.', 'error', 3200);
+        const lm = document.getElementById('loginModal');
+        if (lm && typeof openModal === 'function') openModal(lm);
+        return;
+      }
+
+      const { userText, aiConclusion } = extractSummary();
+      if (!vehicleInfo?.model || !vehicleInfo?.year){
+        showToast('Dados do veículo ausentes. Volte e selecione o carro.', 'error');
+        return;
+      }
+      if (!userText || !aiConclusion){
+        showToast('Converse com a IA (relato e resposta) antes de concluir.', 'error', 3600);
+        return;
+      }
+
+      btnFinish.disabled = true;
+      const payload = {
+        brand: vehicleInfo.brand || '',
+        model: vehicleInfo.model || '',
+        year:  vehicleInfo.year  || '',
+        userText,
+        aiConclusion,
+        createdAt: new Date().toISOString()
+      };
+
+      try{
+        await postHistory(payload);
+        showToast('Diagnóstico salvo no histórico.', 'success', 2000);
+        window.location.assign('../HTML/Home.html');
+      }catch(err){
+        console.error(err);
+        showToast(err?.message || 'Erro ao salvar diagnóstico.', 'error', 3600);
+      }finally{
+        btnFinish.disabled = false;
+      }
+    });
+  })();
 });
