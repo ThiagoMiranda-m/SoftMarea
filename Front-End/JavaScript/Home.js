@@ -461,79 +461,93 @@ $('#form-forgot-password')?.addEventListener('submit', async e => {
   //const btnSendPhoneCode = $('#btn-send-phone-code');//
 
 function setupRecaptcha() {
-    // 1. Destrói o verifier ANTERIOR, se ele existir na memória
-    if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === 'function') {
-      window.recaptchaVerifier.clear();
-      console.log("Verifier anterior limpo.");
+    // 1. Limpa o verifier anterior com segurança
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {
+        // Ignora erro se já estiver destruído
+        console.warn("Verifier já estava limpo ou destruído.");
+      }
+      window.recaptchaVerifier = null;
     }
 
-    // 2. Encontra e limpa o container do DOM
-    const recaptchaContainer = $('#recaptcha-container');
-    if (!recaptchaContainer) {
-      console.error('Container do reCAPTCHA não encontrado.');
-      return;
-    }
-    recaptchaContainer.innerHTML = ''; 
+    // 2. Limpa o container visual
+    const recaptchaContainer = document.getElementById('recaptcha-container');
+    if (!recaptchaContainer) return;
+    recaptchaContainer.innerHTML = '';
 
-    // 3. Cria o NOVO verifier no container limpo
+    // 3. Cria o NOVO verifier
     try {
-      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(recaptchaContainer, { 
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
         'size': 'invisible',
         'callback': (response) => {
-          // Este callback é chamado quando o reCAPTCHA é resolvido
-          // O signInWithPhoneNumber continua a partir daqui
-          console.log("reCAPTCHA resolvido, enviando SMS...");
+          console.log("reCAPTCHA resolvido.");
+        },
+        'expired-callback': () => {
+           showToast('O reCAPTCHA expirou. Tente novamente.', 'error');
+           // Opcional: reiniciar o processo
         }
       });
-      
-      // 4. IMPORTANTE: NÃO chame .render() aqui.
-      // O .render() será acionado automaticamente pelo
-      // signInWithPhoneNumber quando o usuário clicar no botão "Enviar Código".
-      console.log("Novo reCAPTCHA verifier pronto.");
-      
+      console.log("Novo reCAPTCHA pronto.");
     } catch (err) {
       console.error("Erro ao criar RecaptchaVerifier:", err);
-      showToast('Erro ao iniciar reCAPTCHA. Tente novamente.', 'error');
     }
-  }
+}
 
-  formSendCode?.addEventListener('submit', async (e) => { // Mudado para 'submit'
-      e.preventDefault();
-      
-      const phoneNumber = new FormData(formSendCode).get('phone');
-      const appVerifier = window.recaptchaVerifier;
+formSendCode?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const rawPhone = new FormData(formSendCode).get('phone');
+    
+    // DICA: Formatação básica para garantir o padrão E.164 (ex: +55...)
+    // Se o usuário esquecer o '+', nós adicionamos.
+    let phoneNumber = rawPhone.trim();
+    if (!phoneNumber.startsWith('+')) {
+        phoneNumber = '+' + phoneNumber; 
+    }
 
-      if (!appVerifier) {
-          showToast('reCAPTCHA não inicializado. Tente fechar e abrir o modal.', 'error');
-          return;
-      }
-      
-      const submitButton = $('#btn-send-phone-code');
-      if(submitButton) submitButton.disabled = true;
+    const appVerifier = window.recaptchaVerifier;
+    if (!appVerifier) {
+        setupRecaptcha(); // Tenta recuperar se não existir
+        showToast('Erro interno do reCAPTCHA. Tente clicar novamente.', 'error');
+        return;
+    }
+    
+    const submitButton = document.getElementById('btn-send-phone-code');
+    if(submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Enviando...";
+    }
 
-      auth.signInWithPhoneNumber(phoneNumber, appVerifier)
-        .then(confirmationResult => {
-          window.confirmationResult = confirmationResult;
-          formSendCode.classList.add('is-hidden');
-          formVerifyCode.classList.remove('is-hidden');
-          showToast('Código SMS enviado!', 'success');
-        })
-        .catch(err => {
-          // Se falhar (ex: número inválido, reCAPTCHA falhou),
-          // limpamos o verifier e preparamos um novo para a próxima tentativa.
-          if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === 'function') {
-              window.recaptchaVerifier.clear();
-          }
-          setupRecaptcha(); // Prepara um novo verifier
-          
-          showToast(`Erro: ${err.message}`, 'error');
-        })
-        .finally(() => {
-           // Reativa o botão
-           if(submitButton) submitButton.disabled = false;
-        });
-  });
+    auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+      .then(confirmationResult => {
+        window.confirmationResult = confirmationResult;
+        formSendCode.classList.add('is-hidden');
+        formVerifyCode.classList.remove('is-hidden');
+        showToast('Código SMS enviado!', 'success');
+      })
+      .catch(err => {
+        console.error("Erro no envio de SMS:", err);
+        
+        // REINICIA O RECAPTCHA CORRETAMENTE
+        setupRecaptcha(); 
+        
+        // Tradução amigável de erros comuns
+        let msg = err.message;
+        if (msg.includes('billing')) msg = "O projeto requer faturamento ativado no Firebase.";
+        if (msg.includes('format')) msg = "Formato de telefone inválido. Use +55...";
+        if (msg.includes('internal-error')) msg = "Erro interno. Verifique o console.";
 
+        showToast(`Erro: ${msg}`, 'error');
+      })
+      .finally(() => {
+         if(submitButton) {
+             submitButton.disabled = false;
+             submitButton.textContent = "Enviar Código";
+         }
+      });
+});
   formVerifyCode?.addEventListener('submit', async e => {
 // ... (O restante desta função permanece exatamente igual)
     e.preventDefault();

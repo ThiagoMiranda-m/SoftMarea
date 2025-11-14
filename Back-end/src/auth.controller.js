@@ -46,7 +46,7 @@ exports.register = async (req, res) => {
     // Se houver um registro antigo não verificado, ele será substituído
     await pool.query('DELETE FROM users WHERE email = ? AND is_verified = FALSE', [email]);
 
-    const password_hash = await bcrypt.hash(password, 12);
+    const password_hash = await bcrypt.hash(password, 10);
     const verification_code = Math.floor(100000 + Math.random() * 900000).toString(); // Gera código de 6 dígitos
     const code_expires_at = new Date(Date.now() + 10 * 60 * 1000); // Código expira em 10 minutos
 
@@ -285,7 +285,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Token de redefinição inválido ou expirado.' });
     }
 
-    const new_password_hash = await bcrypt.hash(password, 12);
+    const new_password_hash = await bcrypt.hash(password, 10);
 
     await pool.query(
       'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires_at = NULL WHERE id = ?',
@@ -367,7 +367,7 @@ exports.handleChat = async (req, res) => {
       Responda em português do Brasil.
     `;
     
-    const chatHistory = (history || []).map(item => ({
+    const chatHistory = (history || []).slice(-14).map(item => ({
       role: item.role === 'user' ? 'user' : 'model',
       parts: [{ text: item.content }],
     }));
